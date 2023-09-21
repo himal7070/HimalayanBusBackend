@@ -25,9 +25,16 @@ public class BusController {
         return new ResponseEntity<>(addedBus, HttpStatus.CREATED);
     }
 
-
-
-
-
-
+    @GetMapping("/viewAll")
+    public ResponseEntity<List<Bus>> getAllBusesHandler()throws BusException{
+        List<Bus> allBuses = busService.viewAllBuses();
+        return new ResponseEntity<>(allBuses,HttpStatus.OK);
     }
+
+
+
+
+
+
+
+}

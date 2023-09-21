@@ -8,6 +8,8 @@ import java.util.List;
 public interface IBusService {
     public Bus addBus(Bus bus) throws BusException;
 
+    public List<Bus> viewAllBuses() throws BusException;
+
 
 
 }
