@@ -10,6 +10,9 @@ public interface IBusService {
 
     public List<Bus> viewAllBuses() throws BusException;
 
+    public Bus updateBus(Bus bus) throws BusException;
+    public Bus deleteBus(Integer busId) throws BusException;
+
 
 
 }

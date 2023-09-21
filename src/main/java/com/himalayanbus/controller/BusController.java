@@ -25,11 +25,24 @@ public class BusController {
         return new ResponseEntity<>(addedBus, HttpStatus.CREATED);
     }
 
-    @GetMapping("/viewAll")
+    @GetMapping("/view")
     public ResponseEntity<List<Bus>> getAllBusesHandler()throws BusException{
         List<Bus> allBuses = busService.viewAllBuses();
         return new ResponseEntity<>(allBuses,HttpStatus.OK);
     }
+
+    @PutMapping("/update")
+    public ResponseEntity<Bus> updateBusHandler(@RequestBody Bus bus) throws BusException{
+        Bus newBus = busService.updateBus(bus);
+        return new ResponseEntity<>(newBus,HttpStatus.OK);
+    }
+
+    @DeleteMapping("/delete/{busId}")
+    public ResponseEntity<Bus> deleteBusByBusIdHandler(@PathVariable("busId") Integer busId) throws BusException{
+        Bus deletedBus = busService.deleteBus(busId);
+        return new ResponseEntity<>(deletedBus,HttpStatus.OK);
+    }
+
 
 
 
