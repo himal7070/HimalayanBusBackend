@@ -3,6 +3,7 @@ package com.himalayanbus.controller;
 import com.himalayanbus.exception.BusException;
 import com.himalayanbus.model.Bus;
 import com.himalayanbus.service.BusService;
+import com.himalayanbus.service.IBusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,7 @@ import java.util.List;
 public class BusController {
 
     @Autowired
-    private BusService busService;
+    private IBusService busService;
 
 
     @PostMapping("/add")
