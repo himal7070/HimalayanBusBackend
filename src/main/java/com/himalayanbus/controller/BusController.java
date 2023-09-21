@@ -2,7 +2,6 @@ package com.himalayanbus.controller;
 
 import com.himalayanbus.exception.BusException;
 import com.himalayanbus.model.Bus;
-import com.himalayanbus.service.BusService;
 import com.himalayanbus.service.IBusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -43,12 +42,5 @@ public class BusController {
         Bus deletedBus = busService.deleteBus(busId);
         return new ResponseEntity<>(deletedBus,HttpStatus.OK);
     }
-
-
-
-
-
-
-
 
 }
