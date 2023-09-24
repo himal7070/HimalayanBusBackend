@@ -1,4 +1,4 @@
-package com.himalayanbus.model;
+package com.himalayanbus.persistence.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -16,6 +16,7 @@ import java.time.LocalTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Bus {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer busId;

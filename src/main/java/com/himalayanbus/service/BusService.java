@@ -1,9 +1,9 @@
 package com.himalayanbus.service;
 
 import com.himalayanbus.exception.BusException;
-import com.himalayanbus.model.Bus;
-import com.himalayanbus.persistence.IBusRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.himalayanbus.persistence.IRepository.IBusRepository;
+import com.himalayanbus.persistence.entity.Bus;
+import com.himalayanbus.service.IService.IBusService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,13 +12,20 @@ import java.util.Optional;
 @Service
 public class BusService implements IBusService {
 
-    @Autowired
-    private IBusRepository busRepository;
+    private final IBusRepository busRepository;
 
-    public Bus addBus(Bus bus)  {
+    public BusService(IBusRepository busRepository) {
+        this.busRepository = busRepository;
+    }
 
-        //saving bus
-        return busRepository.save(bus);
+    public Bus addBus(Bus bus)  throws BusException {
+
+        try {
+            // saving bus
+            return busRepository.save(bus);
+        } catch (Exception e) {
+            throw new BusException("Failed to add bus: " + e.getMessage());
+        }
     }
 
     public List<Bus> viewAllBuses() throws BusException {

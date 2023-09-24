@@ -1,15 +1,14 @@
 package com.himalayanbus.service;
 
 import com.himalayanbus.exception.BusException;
-import com.himalayanbus.model.Bus;
-import com.himalayanbus.persistence.IBusRepository;
+import com.himalayanbus.persistence.entity.Bus;
+import com.himalayanbus.persistence.IRepository.IBusRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -22,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 
-@SpringBootTest
+//@SpringBootTest
 @AutoConfigureMockMvc
 class BusServiceTest {
 
@@ -40,7 +39,7 @@ class BusServiceTest {
 
     //tHis is just an example to test methods for now
     @Test
-    void addBus() {
+    void addBus() throws BusException {
 
         // Arrange
         Bus bus = new Bus();
