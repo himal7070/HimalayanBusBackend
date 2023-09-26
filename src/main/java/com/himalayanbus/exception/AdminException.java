@@ -1,4 +1,7 @@
 package com.himalayanbus.exception;
 
-public class AdminException {
+public class AdminException extends Exception{
+    public AdminException(String message) {
+        super(message);
+    }
 }

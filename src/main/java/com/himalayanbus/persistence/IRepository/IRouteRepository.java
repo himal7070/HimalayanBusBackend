@@ -1,5 +1,8 @@
 package com.himalayanbus.persistence.IRepository;
 
-public interface IRouteRepository {
+import com.himalayanbus.persistence.entity.Route;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface IRouteRepository extends JpaRepository<Route, Integer> {
 
 }
