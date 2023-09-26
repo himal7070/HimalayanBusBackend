@@ -20,7 +20,7 @@ class LoginSignup extends Component {
 
             <div className="login-container">
                 <img src="/img/logobus.png" alt="Welcome Image" className="welcome-image" />
-                <p style={{ color: 'black' }}>Plan your bus trips with ease! </p>
+                <p className="logo-paragraph">Plan your bus trips with ease! </p>
 
                 <div className="slider">
                     <label
@@ -51,9 +51,13 @@ class LoginSignup extends Component {
                             <label htmlFor="loginPassword"></label>
                             <input type="password" className="form-control" id="loginPassword" placeholder="Password" required />
                         </div>
-                        <a href="#">Forgot password?</a>
-                        <button type="submit" className="btn btn-primary btn-block mt-3">Login</button>
-                        <p className="text-center mt-3">Not a member? <a href="#signup-tab" data-toggle="tab">Signup now</a></p>
+                        <div className="form-group forgot-password">
+                            <a href="#" className="text-forget-password">Forgot password?</a>
+                        </div>
+                        <div className="form-group">
+                            <button type="submit" className="btn btn-primary btn-block">Login</button>
+                        </div>
+                        <p className="text-center mt-3"><span className="small-text">Not a member?</span> <a href="#" data-toggle="tab"><span className="text-signup-now">Signup now</span></a></p>
                     </form>
                 )}
 

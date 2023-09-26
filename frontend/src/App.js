@@ -2,10 +2,9 @@ import './App.css';
 
 import React from 'react';
 import './styles/LoginSignup.css';
-
-
 import 'bootstrap/dist/css/bootstrap.min.css';
 import LoginSignup from "./components/LoginSignup";
+
 
 function App() {
   return (
