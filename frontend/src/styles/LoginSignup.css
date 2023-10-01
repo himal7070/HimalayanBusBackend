@@ -38,7 +38,7 @@
 .tab-label {
     cursor: pointer;
     padding: 0 20px;
-    background-color: #eee;
+    background-color: rgb(128, 128, 128);
     border: 1px solid #ccc;
     border-radius: 15px 5px 0 0;
     font-size: 20px;
@@ -101,3 +101,22 @@
     font-size: 16px;
     color: black;
 }
+
+
+/* for show-password */
+.password-input {
+    display: flex;
+    align-items: center;
+}
+
+.password-input-field {
+
+}
+
+.show-password-button {
+    width: 30px;
+    height: 30px;
+    background-color: transparent !important;
+    border: none !important;
+}
+

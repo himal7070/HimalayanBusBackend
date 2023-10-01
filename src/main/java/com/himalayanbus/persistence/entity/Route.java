@@ -1,9 +1,17 @@
 package com.himalayanbus.persistence.entity;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
+@Entity
 public class Route {
 
     @Id
@@ -12,4 +20,22 @@ public class Route {
     private String routeFrom;
     private String routeTo;
     private Integer distance;
+
+
+
+    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL)
+    private List<Bus> busList;
+
+    {
+        busList = new ArrayList<>();
+    }
+
+
+    public Route(String routeFrom, String routeTo, Integer distance) {
+        this.routeFrom = routeFrom;
+        this.routeTo = routeTo;
+        this.distance = distance;
+
+
+    }
 }

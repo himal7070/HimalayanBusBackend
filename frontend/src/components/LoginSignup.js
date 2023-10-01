@@ -1,25 +1,29 @@
 import React, { Component } from 'react';
 import '../styles/LoginSignup.css';
+import {MDBBtn, MDBInput, MDBInputGroup} from "mdb-react-ui-kit";
+import {FaEye, FaEyeSlash} from "react-icons/fa";
+
 
 class LoginSignup extends Component {
     constructor(props) {
         super(props);
         this.state = {
             activeTab: 'login',
+            showPassword: false, // for password visibility
         };
     }
 
     handleTabChange = (tab) => {
-        this.setState({ activeTab: tab });
+        this.setState({ activeTab: tab, showPassword: false });
     };
 
     render() {
-        const { activeTab } = this.state;
+        const { activeTab, showPassword } = this.state;
 
         return (
 
             <div className="login-container">
-                <img src="/img/logobus.png" alt="Welcome Image" className="welcome-image" />
+                <img src="/img/logo-bus.png" alt="Welcome Image" className="welcome-image" />
                 <p className="logo-paragraph">Plan your bus trips with ease! </p>
 
                 <div className="slider">
@@ -49,8 +53,27 @@ class LoginSignup extends Component {
                         </div>
                         <div className="form-group">
                             <label htmlFor="loginPassword"></label>
-                            <input type="password" className="form-control" id="loginPassword" placeholder="Password" required />
+                            <div className="password-input">
+                                <input
+                                    type={showPassword ? 'text' : 'password'} // Use showPassword from state
+                                    className="form-control password-input-field" // Add a unique class name
+                                    id="loginPassword"
+                                    placeholder="Password"
+                                    required
+                                />
+                                <MDBBtn
+                                    floating
+                                    color='info'
+                                    wrapperClass='float-start'
+                                    onClick={() => this.setState({ showPassword: !showPassword })}
+                                    className="show-password-button"
+                                    type="button"
+                                >
+                                    {showPassword ? <FaEye /> : <FaEyeSlash />}
+                                </MDBBtn>
+                            </div>
                         </div>
+
                         <div className="form-group forgot-password">
                             <a href="#" className="text-forget-password">Forgot password?</a>
                         </div>
@@ -77,9 +100,30 @@ class LoginSignup extends Component {
                         </div>
                         <div className="form-group">
                             <label htmlFor="signupPassword"></label>
-                            <input type="password" className="form-control" id="signupPassword" placeholder="Password" required />
+                            <div className="password-input">
+                                <input
+                                    type={showPassword ? 'text' : 'password'} // Use showPassword from state
+                                    className="form-control signup-password-input" // Add a unique class name
+                                    id="signupPassword"
+                                    placeholder="Password"
+                                    required
+                                />
+                                <MDBBtn
+                                    floating
+                                    color='info'
+                                    wrapperClass='float-start'
+                                    onClick={() => this.setState({ showPassword: !showPassword })}
+                                    className="show-password-button"
+                                    type="button"
+                                >
+                                    {showPassword ? <FaEye /> : <FaEyeSlash />}
+                                </MDBBtn>
+                            </div>
                         </div>
+
+                        <div className="form-group">
                         <button type="submit" className="btn btn-primary btn-block mt-3">Signup</button>
+                        </div>
                     </form>
                 )}
             </div>
