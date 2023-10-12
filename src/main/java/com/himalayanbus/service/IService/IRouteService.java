@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface IRouteService {
     Route addRoute(Route route) throws RouteException;
-    List<Route> viewAllRoute() throws RouteException;
+    List<Route> viewAllRoutes() throws RouteException;
     Route updateRoute(Route route) throws RouteException;
     Route deleteRoute(int routeID) throws RouteException;
 

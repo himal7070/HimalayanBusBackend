@@ -31,7 +31,7 @@ public class RouteController {
     @GetMapping("/route/view")
     public ResponseEntity<List<Route>> getAllRouteHandler() throws RouteException{
 
-        List<Route> route= iRouteService.viewAllRoute();
+        List<Route> route= iRouteService.viewAllRoutes();
 
         return new ResponseEntity<>(route,HttpStatus.OK);
     }

@@ -7,6 +7,7 @@ import com.himalayanbus.persistence.entity.Bus;
 import com.himalayanbus.persistence.entity.Route;
 import com.himalayanbus.service.IService.IBusService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -26,54 +27,32 @@ public class BusService implements IBusService {
     }
 
 
-    public Bus addBus(Bus bus)  throws BusException {
-
-        try {
-            Route route = bus.getRoute();
-            if (route == null) {
-                throw new BusException("Route information is missing.");
-            }
-
-            String routeFrom = bus.getRouteFrom();
-            String routeTo = bus.getRouteTo();
-            Integer distance = route.getDistance();
-
-            //if any of the required fields are missing
-            if (routeFrom == null || routeTo == null || distance == null) {
-                throw new BusException("Route information is incomplete.");
-            }
-
-
-            route = new Route(routeFrom, routeTo, distance);
-
-            bus.setRoute(route);
-
-            if (route.getBusList() != null) {
-                route.getBusList().add(bus);
-            }
-
-            return busRepository.save(bus);
-        } catch (Exception e) {
-            throw new BusException("Failed to add bus: " + e.getMessage());
-        }
-
+    @Override
+    @Transactional
+    public Bus addBus(Bus bus) throws BusException {
+        Route route = validateAndCreateRoute(bus);
+        bus.setRoute(route);
+        return busRepository.save(bus);
     }
 
+    @Override
     public List<Bus> viewAllBuses() throws BusException {
         List<Bus> busList = busRepository.findAll();
-        if(busList.isEmpty()){
-            throw new BusException("There is no bus available at the moment");
+        if (busList.isEmpty()) {
+            throw new BusException("There are no buses available at the moment");
         }
         return busList;
     }
 
+    @Override
+    @Transactional
     public Bus updateBus(Bus bus) throws BusException {
-
         Optional<Bus> findBus = busRepository.findById(bus.getBusId());
-        if(findBus.isEmpty()){
-            throw new BusException("There is no bus available with this id: "+ bus.getBusId());
+        if (findBus.isEmpty()) {
+            throw new BusException("No bus found with id: " + bus.getBusId());
         }
-        Route route = iRouteRepository.findByRouteScheduled(bus.getRouteFrom(),bus.getRouteTo());
+
+        Route route = iRouteRepository.findByRouteScheduled(bus.getRouteFrom(), bus.getRouteTo());
         if (route != null) {
             throw new BusException("A bus on this route has already been scheduled.");
         } else {
@@ -83,31 +62,65 @@ public class BusService implements IBusService {
             return busRepository.save(bus);
         }
     }
-    public Bus deleteBus(Integer busId) throws BusException{
 
+    @Override
+    @Transactional
+    public Bus deleteBus(Integer busId) throws BusException {
         Optional<Bus> bus = busRepository.findById(busId);
 
-        if(bus.isPresent()){
+        if (bus.isPresent()) {
             Bus existingBus = bus.get();
-
-            //checks if the current date is before the journey date and checks if seats are reserved
-            if(LocalDate.now().isBefore(existingBus.getJourneyDate()) && !Objects.equals(existingBus.getAvailableSeats(), existingBus.getTotalSeats())){
+            if (canDeleteBus(existingBus)) {
+                busRepository.delete(existingBus);
+                return existingBus;
+            } else {
                 throw new BusException("Cannot delete scheduled bus.");
             }
-            busRepository.delete(existingBus);
-            return existingBus;
-
-        } else throw  new BusException("There is no such bus with this busId: "+busId);
-
+        } else {
+            throw new BusException("No bus found with id: " + busId);
+        }
     }
 
+    @Override
     public List<Bus> viewBusType(String busType) throws BusException {
         List<Bus> busListType = busRepository.findByBusType(busType);
-        if(busListType.isEmpty()){
-
-            throw new BusException("There are no buses with bus type: "+ busType);
+        if (busListType.isEmpty()) {
+            throw new BusException("No buses found with bus type: " + busType);
         }
         return busListType;
+    }
+
+
+
+    //-------------------------------------- validation to a separate method --------------------------------------
+
+
+
+    private Route validateAndCreateRoute(Bus bus) throws BusException {
+        Route route = bus.getRoute();
+        if (route == null) {
+            throw new BusException("Route information is missing.");
+        }
+
+        String routeFrom = bus.getRouteFrom();
+        String routeTo = bus.getRouteTo();
+        Integer distance = route.getDistance();
+
+        if (routeFrom == null || routeTo == null || distance == null) {
+            throw new BusException("Route information is incomplete.");
+        }
+
+        Route existingRoute = iRouteRepository.findByRouteScheduled(routeFrom, routeTo);
+        if (existingRoute != null) {
+            throw new BusException("A bus on this route has already been scheduled.");
+        }
+
+        route = new Route(routeFrom, routeTo, distance);
+        return route;
+    }
+
+    private boolean canDeleteBus(Bus bus) {
+        return LocalDate.now().isBefore(bus.getJourneyDate()) && !Objects.equals(bus.getAvailableSeats(), bus.getTotalSeats());
     }
 
 

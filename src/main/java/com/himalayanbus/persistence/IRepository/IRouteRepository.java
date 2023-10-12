@@ -9,4 +9,5 @@ public interface IRouteRepository extends JpaRepository<Route, Integer> {
     default Route findByRouteScheduled(String from, String to) {
         return null;
     }
+
 }
