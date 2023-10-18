@@ -7,6 +7,7 @@ import com.himalayanbus.persistence.entity.UserLoginDTO;
 import com.himalayanbus.persistence.entity.UserLoginSession;
 import com.himalayanbus.service.IService.IUserLoginService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.security.auth.login.LoginException;
 import java.security.SecureRandom;
@@ -27,6 +28,7 @@ public class UserLoginService implements IUserLoginService{
     }
 
     @Override
+    @Transactional(rollbackFor = {LoginException.class})
     public UserLoginSession userLogin(UserLoginDTO userLoginDTO) throws LoginException {
         User registeredUser = iUserRepository.findByEmail(userLoginDTO.getEmail());
         if (registeredUser == null) {
@@ -44,18 +46,21 @@ public class UserLoginService implements IUserLoginService{
         currentUserLoginSession.setSessionKey(key);
         currentUserLoginSession.setTime(LocalDateTime.now());
         return iUserLoginSessionRepository.save(currentUserLoginSession);
+
     }
 
 
     @Override
+    @Transactional(rollbackFor = {LoginException.class})
     public String userLogout(String key) throws LoginException {
-        UserLoginSession loggedInUser = iUserLoginSessionRepository.findBySessionKey(key);
-        if (loggedInUser == null) {
+        UserLoginSession currentLoggedInUser = iUserLoginSessionRepository.findBySessionKey(key);
+        if (currentLoggedInUser == null) {
             throw new LoginException("Invalid key or user not logged in.");
         }
 
-        iUserLoginSessionRepository.delete(loggedInUser);
+        iUserLoginSessionRepository.delete(currentLoggedInUser);
         return "User logged out successfully.";
+
     }
 
 
@@ -63,7 +68,7 @@ public class UserLoginService implements IUserLoginService{
 
 
 
-//-------------------------------------- Session key generator method --------------------------------------
+//-------------------------------------- session key generator method --------------------------------------
 
     private String generateSessionKey() {
         SecureRandom secureRandom = new SecureRandom();

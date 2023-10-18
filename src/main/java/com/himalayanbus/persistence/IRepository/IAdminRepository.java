@@ -1,8 +1,15 @@
-//package com.himalayanbus.persistence.IRepository;
-//
-//import com.himalayanbus.persistence.entity.Admin;
-//import org.springframework.data.jpa.repository.JpaRepository;
-//
-//public interface IAdminRepository extends JpaRepository<Admin, Integer> {
-//
-//}
+package com.himalayanbus.persistence.IRepository;
+
+import com.himalayanbus.persistence.entity.Admin;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+
+@Repository
+public interface IAdminRepository extends JpaRepository<Admin, Integer> {
+
+    List<Admin> findByEmail(String email);
+
+}

@@ -14,7 +14,8 @@ import java.util.List;
 public class BusController {
 
     private final IBusService busService;
-    public BusController(IBusService busService) {
+    public BusController(IBusService busService)
+    {
         this.busService = busService;
     }
 

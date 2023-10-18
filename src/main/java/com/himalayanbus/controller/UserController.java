@@ -3,7 +3,6 @@ package com.himalayanbus.controller;
 import com.himalayanbus.exception.UserException;
 import com.himalayanbus.persistence.entity.User;
 import com.himalayanbus.service.IService.IUserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,6 +43,7 @@ public class UserController {
         List<User> userList = iUserService.viewAllUsers(sessionKey);
         return new ResponseEntity<>(userList, HttpStatus.OK);
     }
+
 
 
 }
