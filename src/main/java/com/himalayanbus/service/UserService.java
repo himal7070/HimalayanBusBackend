@@ -1,26 +1,24 @@
 package com.himalayanbus.service;
 
 import com.himalayanbus.exception.UserException;
-import com.himalayanbus.persistence.IRepository.IUserLoginSessionRepository;
 import com.himalayanbus.persistence.IRepository.IUserRepository;
 import com.himalayanbus.persistence.entity.User;
-import com.himalayanbus.persistence.entity.UserLoginSession;
 import com.himalayanbus.service.IService.IUserService;
+import io.jsonwebtoken.Claims;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class UserService implements IUserService {
 
     private final IUserRepository userRepository;
-    private final IUserLoginSessionRepository userLoginSessionRepository;
+    private final JwtTokenUtil jwtTokenUtil;
 
-    public UserService(IUserRepository userRepository, IUserLoginSessionRepository userLoginSessionRepository) {
+    public UserService(IUserRepository userRepository, JwtTokenUtil jwtTokenUtil) {
         this.userRepository = userRepository;
-        this.userLoginSessionRepository = userLoginSessionRepository;
+        this.jwtTokenUtil = jwtTokenUtil;
     }
 
     @Override
@@ -34,58 +32,67 @@ public class UserService implements IUserService {
 
     @Override
     @Transactional(rollbackFor = UserException.class)
-    public User updateUser(User user, String key) throws UserException {
-        UserLoginSession loggedInUser = getUserBySessionKey(key);
-        checkValidUserForUpdate(loggedInUser, user);
+    public User updateUser(User user, String jwtToken) throws UserException {
+        Claims claims = jwtTokenUtil.validateJwtToken(jwtToken);
+
+        Integer userIdFromToken = (Integer) claims.get("sub");
+        String userRoleFromToken = (String) claims.get("role");
+
+        Integer userIdFromUser = user.getUserID();
+
+        if (userIdFromUser != null) {
+            if (!userIdFromUser.equals(userIdFromToken) && !userRoleFromToken.equals("admin")) {
+                throw new UserException("Invalid user details, you can only update your own profile.");
+            }
+        }
+
         return userRepository.save(user);
     }
 
     @Override
     @Transactional(rollbackFor = UserException.class)
-    public User deleteUser(Integer userID, String key) throws UserException {
-        UserLoginSession loggedInUser = getUserBySessionKey(key);
-        User user = getUserById(userID);
-        userRepository.delete(user);
-        return user;
-    }
+    public User deleteUser(Integer userID, String jwtToken) throws UserException {
+        Claims claims = jwtTokenUtil.validateJwtToken(jwtToken);
 
+        Integer userIdFromToken = (Integer) claims.get("sub");
+        String userRoleFromToken = (String) claims.get("role");
+
+        if (userIdFromToken.equals(userID) || userRoleFromToken.equals("admin")) {
+            User user = getUserById(userID);
+            userRepository.delete(user);
+            return user;
+        } else {
+            throw new UserException("You don't have permission to delete this account.");
+        }
+    }
 
 
     @Override
     @Transactional(readOnly = true)
-    public List<User> viewAllUsers(String key) throws UserException {
-        UserLoginSession loggedInUser = getUserBySessionKey(key);
-        List<User> userList = userRepository.findAll();
-        if (userList.isEmpty()) {
-            throw new UserException("No users found!");
-        }
-        return userList;
-    }
+    public List<User> viewAllUsers(String jwtToken) throws UserException {
+        Claims claims = jwtTokenUtil.validateJwtToken(jwtToken);
 
-
-
-
-
-
-    //--------------------------------------  sub divided methods [lets say Dry principle]--------------------------------------
-
-    private UserLoginSession getUserBySessionKey(String key) throws UserException {
-        UserLoginSession loggedInUser = userLoginSessionRepository.findBySessionKey(key);
-        if (loggedInUser == null) {
-            throw new UserException("Please enter a valid key or login first!");
-        }
-        return loggedInUser;
-    }
-
-    private void checkValidUserForUpdate(UserLoginSession loggedInUser, User user) throws UserException {
-        if (!Objects.equals(user.getUserID(), loggedInUser.getUserID())) {
-            throw new UserException("Invalid user details, please login for updating user!");
+        if (claims.get("role").equals("admin")) {
+            List<User> userList = userRepository.findAll();
+            if (userList.isEmpty()) {
+                throw new UserException("No users found!");
+            }
+            return userList;
+        } else {
+            throw new UserException("Only admin has permission to view all users.");
         }
     }
 
     private User getUserById(Integer userID) throws UserException {
         return userRepository.findById(userID).orElseThrow(() -> new UserException("Invalid user ID!"));
     }
+
+
+
+    // "message": "The signing key's size is 112 bits which is not secure enough for the HS512 algorithm.  The JWT JWA Specification (RFC 7518, Section 3.2) states that keys used with HS512 MUST have a size >= 512 bits (the key size must be greater than or equal to the hash output size).  Consider using the io.jsonwebtoken.security.Keys class's 'secretKeyFor(SignatureAlgorithm.HS512)' method to create a key guaranteed to be secure enough for HS512.  See https://tools.ietf.org/html/rfc7518#section-3.2 for more information.",
+//         "details": "uri=/himalayanbus/admin/login"
+
+
 }
 
 

@@ -1,9 +1,6 @@
 package com.himalayanbus.persistence.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,6 +26,8 @@ public class Reservation {
 
     private LocalTime time;
 
+    private String departureLocation;
+
     private String destination;
 
     private LocalDate journeyDate;
@@ -36,5 +35,11 @@ public class Reservation {
     private Integer bookedSeat;
 
     private Integer fare;
+
+    @ManyToOne
+    private Bus bus;
+
+    @ManyToOne
+    private User user;
 
 }

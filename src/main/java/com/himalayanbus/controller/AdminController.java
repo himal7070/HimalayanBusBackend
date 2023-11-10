@@ -4,6 +4,8 @@ package com.himalayanbus.controller;
 import com.himalayanbus.exception.AdminException;
 import com.himalayanbus.persistence.entity.Admin;
 import com.himalayanbus.service.IService.IAdminService;
+import com.himalayanbus.service.JwtTokenUtil;
+import io.jsonwebtoken.Claims;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -16,40 +18,34 @@ import javax.validation.Valid;
 @RequestMapping("/himalayanbus")
 public class AdminController {
 
-    private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
+    private final IAdminService adminService;
+    private final JwtTokenUtil jwtTokenUtil;
 
-    private final IAdminService iAdminService;
-
-    public AdminController(IAdminService iAdminService) {
-        this.iAdminService = iAdminService;
+    public AdminController(IAdminService adminService, JwtTokenUtil jwtTokenUtil) {
+        this.adminService = adminService;
+        this.jwtTokenUtil = jwtTokenUtil;
     }
 
+    @PostMapping("/create")
+    public ResponseEntity<Admin> createAdmin(@RequestBody Admin admin, @RequestParam String jwtToken) throws AdminException {
+        validateAdmin(jwtToken);
+        Admin createdAdmin = adminService.createAdmin(admin);
+        return new ResponseEntity<>(createdAdmin, HttpStatus.CREATED);
+    }
 
-    @PostMapping("/admin/signup")
-    public ResponseEntity<Admin> registerAdmin(@Valid @RequestBody Admin admin) {
-        try {
-            logger.info("Received a request to create admin: {}", admin);
-            Admin savedAdmin = iAdminService.createAdmin(admin);
-            return new ResponseEntity<>(savedAdmin, HttpStatus.CREATED);
-        } catch (AdminException e) {
-            logger.error("Error while creating admin: {}", e.getMessage());
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    @PutMapping("/update")
+    public ResponseEntity<Admin> updateAdmin(@RequestBody Admin admin, @RequestParam String jwtToken) throws AdminException {
+        validateAdmin(jwtToken);
+        Admin updatedAdmin = adminService.updateAdmin(admin, jwtToken);
+        return new ResponseEntity<>(updatedAdmin, HttpStatus.OK);
+    }
+
+    private void validateAdmin(String jwtToken) throws AdminException {
+        Claims claims = jwtTokenUtil.validateJwtToken(jwtToken);
+        if (!"admin".equals(claims.get("role"))) {
+            throw new AdminException("Unauthorized: Admin role required.");
         }
     }
-
-    @PutMapping("/admin/update")
-    public ResponseEntity<Admin> updateAdmin(@Valid @RequestBody Admin admin, @RequestParam(required = false) String key) {
-        try {
-            logger.info("Received a request to update admin: {}", admin);
-            Admin updatedAdmin = iAdminService.updateAdmin(admin, key);
-            return new ResponseEntity<>(updatedAdmin, HttpStatus.OK);
-        } catch (AdminException e) {
-            logger.error("Error while updating admin: {}", e.getMessage());
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-    }
-
-
 
 
 }

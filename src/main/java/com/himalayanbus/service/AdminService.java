@@ -1,29 +1,26 @@
 package com.himalayanbus.service;
 
 import com.himalayanbus.exception.AdminException;
-import com.himalayanbus.persistence.IRepository.IAdminLoginSessionRepository;
 import com.himalayanbus.persistence.IRepository.IAdminRepository;
 import com.himalayanbus.persistence.entity.Admin;
-import com.himalayanbus.persistence.entity.AdminLoginSession;
 import com.himalayanbus.service.IService.IAdminService;
+import io.jsonwebtoken.Claims;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 
 
 @Service
 public class AdminService implements IAdminService {
 
     private final IAdminRepository iAdminRepository;
+    private final JwtTokenUtil jwtTokenUtil;
 
-    private final IAdminLoginSessionRepository iAdminSessionRepository;
 
-
-    public AdminService(IAdminRepository iAdminRepository, IAdminLoginSessionRepository iAdminSessionRepository) {
+    public AdminService(IAdminRepository iAdminRepository, JwtTokenUtil jwtTokenUtil) {
         this.iAdminRepository = iAdminRepository;
-        this.iAdminSessionRepository = iAdminSessionRepository;
+        this.jwtTokenUtil = jwtTokenUtil;
     }
 
 
@@ -39,19 +36,22 @@ public class AdminService implements IAdminService {
         return iAdminRepository.save(admin);
     }
 
+
+
     @Override
     @Transactional
-    public Admin updateAdmin(Admin admin, String sessionKey) throws AdminException {
-        AdminLoginSession adminSession = iAdminSessionRepository.findBySessionKey(sessionKey);
-        if (adminSession == null) {
-            throw new AdminException("Invalid session key or not logged in. Please log in first.");
-        }
+    public Admin updateAdmin(Admin admin, String jwtToken) throws AdminException {
+        Claims claims = jwtTokenUtil.validateJwtToken(jwtToken);
 
-        if (!Objects.equals(admin.getAdminID(), adminSession.getAdminID())) {
+        Integer adminIDFromToken = (Integer) claims.get("sub");
+        String adminRoleFromToken = (String) claims.get("role");
+
+        if (!admin.getAdminID().equals(adminIDFromToken) && !adminRoleFromToken.equals("admin")) {
             throw new AdminException("Invalid admin details. You must log in to update the admin information.");
         }
 
         return iAdminRepository.save(admin);
     }
+
 
 }

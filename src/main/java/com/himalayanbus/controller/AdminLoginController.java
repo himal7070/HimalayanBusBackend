@@ -2,41 +2,41 @@ package com.himalayanbus.controller;
 
 
 import com.himalayanbus.exception.AdminException;
-import com.himalayanbus.persistence.entity.Admin;
 import com.himalayanbus.persistence.entity.AdminLoginDTO;
-import com.himalayanbus.persistence.entity.AdminLoginSession;
 import com.himalayanbus.service.IService.IAdminLoginService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.security.auth.login.LoginException;
-import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/himalayanbus")
 public class AdminLoginController {
 
-    private final IAdminLoginService iAdminLoginService;
+    private final IAdminLoginService adminLoginService;
 
-
-    public AdminLoginController(IAdminLoginService iAdminLoginService) {
-        this.iAdminLoginService = iAdminLoginService;
+    public AdminLoginController(IAdminLoginService adminLoginService) {
+        this.adminLoginService = adminLoginService;
     }
 
     @PostMapping("/admin/login")
-    public ResponseEntity<AdminLoginSession> loginAdmin(@RequestBody @Valid AdminLoginDTO loginDTO)
-            throws AdminException, LoginException {
-        AdminLoginSession currentAdminSession = iAdminLoginService.adminLogin(loginDTO);
-        return new ResponseEntity<>(currentAdminSession, HttpStatus.ACCEPTED);
+    public ResponseEntity<String> adminLogin(@RequestBody AdminLoginDTO loginDTO) {
+        try {
+            String jwtToken = adminLoginService.adminLogin(loginDTO);
+            return new ResponseEntity<>(jwtToken, HttpStatus.OK);
+        } catch (LoginException | AdminException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
+        }
     }
 
     @PostMapping("/admin/logout")
-    public ResponseEntity<String> logoutAdmin(@RequestParam(required = false) String key) throws LoginException {
-        iAdminLoginService.adminLogout(key);
-        return new ResponseEntity<>("Admin logged out.", HttpStatus.OK);
+    public ResponseEntity<String> adminLogout(@RequestHeader("Authorization") String jwtToken) {
+        adminLoginService.adminLogout(jwtToken);
+        return new ResponseEntity<>("Admin logged out successfully", HttpStatus.OK);
     }
-
 
 
 

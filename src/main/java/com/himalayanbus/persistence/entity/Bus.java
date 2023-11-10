@@ -35,4 +35,5 @@ public class Bus {
     @ManyToOne(cascade = CascadeType.ALL)
     private Route route;
 
+
 }

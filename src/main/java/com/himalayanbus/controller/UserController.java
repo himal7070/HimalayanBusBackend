@@ -13,37 +13,35 @@ import java.util.List;
 @RequestMapping("/himalayanbus")
 public class UserController {
 
-    private final IUserService iUserService;
+    private final IUserService userService;
 
-    public UserController(IUserService iUserService) {
-        this.iUserService = iUserService;
+    public UserController(IUserService userService) {
+        this.userService = userService;
     }
-
 
     @PostMapping("/user/signup")
     public ResponseEntity<User> addUserHandler(@RequestBody User user) throws UserException {
-        User savedUser = iUserService.addUser(user);
+        User savedUser = userService.addUser(user);
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
 
     @PutMapping("/user/update")
-    public ResponseEntity<User> updateUser(@RequestBody User user, @RequestParam(required = false) String sessionKey) throws UserException {
-        User updatedUser = iUserService.updateUser(user, sessionKey);
+    public ResponseEntity<User> updateUser(@RequestBody User user, @RequestParam(required = false) String jwtToken) throws UserException {
+        User updatedUser = userService.updateUser(user, jwtToken);
         return new ResponseEntity<>(updatedUser, HttpStatus.OK);
     }
 
-    @DeleteMapping("/user/delete/{userId}")
-    public ResponseEntity<User> deleteUser(@PathVariable("userId") Integer userId, @RequestParam(required = false) String sessionKey) throws UserException {
-        User deletedUser = iUserService.deleteUser(userId, sessionKey);
+    @DeleteMapping("/admin/user/delete/{userId}")
+    public ResponseEntity<User> deleteUser(@PathVariable("userId") Integer userId, @RequestParam(required = false) String jwtToken) throws UserException {
+        User deletedUser = userService.deleteUser(userId, jwtToken);
         return new ResponseEntity<>(deletedUser, HttpStatus.OK);
     }
 
-    @GetMapping("/user/allUsers")
-    public ResponseEntity<List<User>> viewAllUsers(@RequestParam(required = false) String sessionKey) throws UserException {
-        List<User> userList = iUserService.viewAllUsers(sessionKey);
+    @GetMapping("/admin/user/allUsers")
+    public ResponseEntity<List<User> > viewAllUsers(@RequestParam(required = false) String jwtToken) throws UserException {
+        List<User> userList = userService.viewAllUsers(jwtToken);
         return new ResponseEntity<>(userList, HttpStatus.OK);
     }
-
 
 
 }

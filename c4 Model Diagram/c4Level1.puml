@@ -1,0 +1,29 @@
+@startuml C4_Elements
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(personAlias, "Label", "Optional Description")
+Container(containerAlias, "Label", "Technology", "Optional Description")
+System(systemAlias, "Label", "Optional Description")
+
+Rel(personAlias, containerAlias, "Label", "Optional Technology")
+@enduml
+
+
+
+@startuml SystemContextDiagram
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(Admin, "Admin", "A admin of the bus company, with personal accounts")
+Person(Traveller, "Traveller", "A customer of the Himalayan bus company, with personal travel accounts")
+System(System1, "Bus Booking System", "Enables users to access system functionalities based on their designated roles.")
+System(System2, "E-mail System", "Sends e-mail using The internal Microsoft Exchange e-mail system.")
+System(System3, "Mainframe Booking System", "Stores essential booking data related to customers, accounts, buses, and more.")
+
+
+Rel(Admin, System1, "Views account details, make bookings for customer, managing bus details information and view dashboard with business sales, and statics of users", "Uses")
+Rel(Traveller, System1, "Views account details, and makes booking for bus, view booking details", "Uses")
+Rel(Admin, System2, "Sends e-mails to", "Sends")
+Rel(Traveller, System2, "Sends e-mails to", "Sends")
+Rel(Admin, System3, "Get account information", "Uses")
+Rel(Traveller, System3, "Get account information", "Uses")
+@enduml

@@ -2,13 +2,11 @@ package com.himalayanbus.service;
 
 import com.himalayanbus.exception.RouteException;
 import com.himalayanbus.persistence.IRepository.IRouteRepository;
-import com.himalayanbus.persistence.entity.Bus;
 import com.himalayanbus.persistence.entity.Route;
 import com.himalayanbus.service.IService.IRouteService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 

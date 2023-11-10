@@ -13,4 +13,5 @@ public class AdminLoginDTO {
 
     @NotBlank(message = "Password is required")
     private String password;
+
 }
