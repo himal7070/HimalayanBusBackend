@@ -30,8 +30,7 @@ public class UserLoginController {
     }
 
     @PostMapping("/user/logout")
-    public ResponseEntity<String> userLogout(@RequestHeader("Authorization") String jwtToken) {
-        userLoginService.userLogout(jwtToken);
+    public ResponseEntity<String> userLogout() {
         return new ResponseEntity<>("User logged out successfully", HttpStatus.OK);
     }
 

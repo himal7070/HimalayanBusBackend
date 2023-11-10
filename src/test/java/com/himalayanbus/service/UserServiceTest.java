@@ -1,6 +1,6 @@
 package com.himalayanbus.service;
 
-import com.himalayanbus.persistence.IRepository.IUserRepository;
+import com.himalayanbus.persistence.repository.IUserRepository;
 import com.himalayanbus.persistence.entity.User;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.Test;

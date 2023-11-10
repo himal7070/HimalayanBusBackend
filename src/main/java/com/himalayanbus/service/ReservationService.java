@@ -2,9 +2,9 @@ package com.himalayanbus.service;
 
 
 import com.himalayanbus.exception.ReservationException;
-import com.himalayanbus.persistence.IRepository.IBusRepository;
-import com.himalayanbus.persistence.IRepository.IReservationRepository;
-import com.himalayanbus.persistence.IRepository.IUserRepository;
+import com.himalayanbus.persistence.repository.IBusRepository;
+import com.himalayanbus.persistence.repository.IReservationRepository;
+import com.himalayanbus.persistence.repository.IUserRepository;
 import com.himalayanbus.persistence.entity.Bus;
 import com.himalayanbus.persistence.entity.Reservation;
 import com.himalayanbus.persistence.entity.ReservationDTO;
@@ -70,7 +70,7 @@ public class ReservationService implements IReservationService {
     @Transactional
     @Override
     public Reservation updateReservation(Integer rid, ReservationDTO dto, String jwtToken) throws ReservationException {
-        User user = authenticateUser(jwtToken);
+        authenticateUser(jwtToken);
         Bus bus = findBusByRoute(dto.getDepartureLocation(), dto.getDestination());
         updateAvailableSeats(bus, dto.getBookedSeat());
 
@@ -99,7 +99,7 @@ public class ReservationService implements IReservationService {
     @Transactional
     @Override
     public Reservation deleteReservation(Integer rid, String jwtToken) throws ReservationException {
-        User user = authenticateUser(jwtToken);
+        authenticateUser(jwtToken);
 
         Optional<Reservation> optionalReservation = iReservationRepository.findById(rid);
 
@@ -123,7 +123,7 @@ public class ReservationService implements IReservationService {
     @Transactional(readOnly = true)
     @Override
     public Reservation viewReservationByRID(Integer reservationID, String jwtToken) throws ReservationException {
-        User user = authenticateUser(jwtToken);
+        authenticateUser(jwtToken);
 
         Optional<Reservation> optionalReservation = iReservationRepository.findById(reservationID);
 
@@ -137,7 +137,7 @@ public class ReservationService implements IReservationService {
     @Transactional(readOnly = true)
     @Override
     public List<Reservation> getAllReservation(String jwtToken) throws ReservationException {
-        User user = authenticateUser(jwtToken);
+        authenticateUser(jwtToken);
 
         List<Reservation> list = iReservationRepository.findAll();
 
@@ -151,7 +151,7 @@ public class ReservationService implements IReservationService {
     @Transactional(readOnly = true)
     @Override
     public List<Reservation> viewReservationByUserId(Integer userID, String jwtToken) throws ReservationException {
-        User user = authenticateUser(jwtToken);
+        authenticateUser(jwtToken);
 
         Optional<User> optionalUser = iUserRepository.findById(userID);
 

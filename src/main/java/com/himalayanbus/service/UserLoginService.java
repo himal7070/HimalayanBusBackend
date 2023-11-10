@@ -1,6 +1,6 @@
 package com.himalayanbus.service;
 
-import com.himalayanbus.persistence.IRepository.IUserRepository;
+import com.himalayanbus.persistence.repository.IUserRepository;
 import com.himalayanbus.persistence.entity.User;
 import com.himalayanbus.persistence.entity.UserLoginDTO;
 import com.himalayanbus.service.IService.IUserLoginService;
@@ -32,10 +32,6 @@ public class UserLoginService implements IUserLoginService{
     }
 
 
-    @Override
-    public void userLogout(String jwtToken) {
-
-    }
 
 
 }

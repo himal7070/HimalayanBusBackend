@@ -1,7 +1,7 @@
 package com.himalayanbus.service;
 
 import com.himalayanbus.exception.UserException;
-import com.himalayanbus.persistence.IRepository.IUserRepository;
+import com.himalayanbus.persistence.repository.IUserRepository;
 import com.himalayanbus.persistence.entity.User;
 import com.himalayanbus.service.IService.IUserService;
 import io.jsonwebtoken.Claims;

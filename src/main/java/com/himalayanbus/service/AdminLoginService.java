@@ -2,7 +2,7 @@ package com.himalayanbus.service;
 
 
 import com.himalayanbus.exception.AdminException;
-import com.himalayanbus.persistence.IRepository.IAdminRepository;
+import com.himalayanbus.persistence.repository.IAdminRepository;
 import com.himalayanbus.persistence.entity.Admin;
 import com.himalayanbus.persistence.entity.AdminLoginDTO;
 import com.himalayanbus.service.IService.IAdminLoginService;
@@ -43,10 +43,7 @@ public class AdminLoginService implements IAdminLoginService {
     }
 
 
-    @Override
-    public void adminLogout(String jwtToken) {
 
-    }
 
 
 }

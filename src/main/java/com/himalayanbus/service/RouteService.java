@@ -1,7 +1,7 @@
 package com.himalayanbus.service;
 
 import com.himalayanbus.exception.RouteException;
-import com.himalayanbus.persistence.IRepository.IRouteRepository;
+import com.himalayanbus.persistence.repository.IRouteRepository;
 import com.himalayanbus.persistence.entity.Route;
 import com.himalayanbus.service.IService.IRouteService;
 import org.springframework.stereotype.Service;

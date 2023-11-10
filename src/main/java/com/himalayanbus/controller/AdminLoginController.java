@@ -31,11 +31,9 @@ public class AdminLoginController {
     }
 
     @PostMapping("/admin/logout")
-    public ResponseEntity<String> adminLogout(@RequestHeader("Authorization") String jwtToken) {
-        adminLoginService.adminLogout(jwtToken);
+    public ResponseEntity<String> adminLogout() {
         return new ResponseEntity<>("Admin logged out successfully", HttpStatus.OK);
     }
-
 
 
 }

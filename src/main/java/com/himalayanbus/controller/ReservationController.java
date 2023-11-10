@@ -27,21 +27,21 @@ public class ReservationController {
         return new ResponseEntity<>(reservation, HttpStatus.CREATED);
     }
 
-    @PutMapping("/reservations/{RID}")
-    public ResponseEntity<Reservation> updateReservation(@RequestBody ReservationDTO dto, @RequestHeader("Authorization") String jwtToken, @PathVariable Integer RID) throws ReservationException {
-        Reservation reservation = reservationService.updateReservation(RID, dto, jwtToken);
+    @PutMapping("/reservations/{reservationID}")
+    public ResponseEntity<Reservation> updateReservation(@RequestBody ReservationDTO dto, @RequestHeader("Authorization") String jwtToken, @PathVariable Integer reservationID) throws ReservationException {
+        Reservation reservation = reservationService.updateReservation(reservationID, dto, jwtToken);
         return new ResponseEntity<>(reservation, HttpStatus.OK);
     }
 
-    @DeleteMapping("/reservations/{RID}")
-    public ResponseEntity<Reservation> deleteReservation(@RequestHeader("Authorization") String jwtToken, @PathVariable Integer RID) throws ReservationException {
-        Reservation reservation = reservationService.deleteReservation(RID, jwtToken);
+    @DeleteMapping("/reservations/{reservationID}")
+    public ResponseEntity<Reservation> deleteReservation(@RequestHeader("Authorization") String jwtToken, @PathVariable Integer reservationID) throws ReservationException {
+        Reservation reservation = reservationService.deleteReservation(reservationID, jwtToken);
         return new ResponseEntity<>(reservation, HttpStatus.ACCEPTED);
     }
 
-    @GetMapping("/reservations/{RID}")
-    public ResponseEntity<Reservation> viewReservationById(@PathVariable Integer RID, @RequestHeader("Authorization") String jwtToken) throws ReservationException {
-        Reservation reservation = reservationService.viewReservationByRID(RID, jwtToken);
+    @GetMapping("/reservations/{reservationID}")
+    public ResponseEntity<Reservation> viewReservationById(@PathVariable Integer reservationID, @RequestHeader("Authorization") String jwtToken) throws ReservationException {
+        Reservation reservation = reservationService.viewReservationByRID(reservationID, jwtToken);
         return new ResponseEntity<>(reservation, HttpStatus.OK);
     }
 

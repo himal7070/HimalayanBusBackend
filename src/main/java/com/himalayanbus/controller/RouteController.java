@@ -45,7 +45,7 @@ public class RouteController {
     }
 
     @DeleteMapping("/route/delete/{routeID}")
-    public ResponseEntity<Route> DeleteRoute(@PathVariable Integer routeID) throws RouteException{
+    public ResponseEntity<Route> deleteRoute(@PathVariable Integer routeID) throws RouteException{
 
         Route route = iRouteService.deleteRoute(routeID);
 

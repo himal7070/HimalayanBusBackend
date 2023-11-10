@@ -9,6 +9,6 @@ public interface IAdminLoginService {
 
     String adminLogin(AdminLoginDTO loginDTO) throws LoginException, AdminException;
 
-    void adminLogout(String jwtToken);
+
 
 }

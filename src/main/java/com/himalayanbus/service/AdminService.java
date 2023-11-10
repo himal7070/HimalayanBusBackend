@@ -1,7 +1,7 @@
 package com.himalayanbus.service;
 
 import com.himalayanbus.exception.AdminException;
-import com.himalayanbus.persistence.IRepository.IAdminRepository;
+import com.himalayanbus.persistence.repository.IAdminRepository;
 import com.himalayanbus.persistence.entity.Admin;
 import com.himalayanbus.service.IService.IAdminService;
 import io.jsonwebtoken.Claims;

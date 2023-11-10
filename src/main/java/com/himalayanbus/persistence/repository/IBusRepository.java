@@ -1,4 +1,4 @@
-package com.himalayanbus.persistence.IRepository;
+package com.himalayanbus.persistence.repository;
 
 import com.himalayanbus.persistence.entity.Bus;
 import org.springframework.data.jpa.repository.JpaRepository;
