@@ -9,8 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.security.auth.login.LoginException;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/himalayanbus")

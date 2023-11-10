@@ -1,6 +1,5 @@
 package com.himalayanbus.service.IService;
 
-import com.himalayanbus.exception.AdminException;
 import com.himalayanbus.exception.UserException;
 import com.himalayanbus.persistence.entity.User;
 
