@@ -73,12 +73,11 @@ public class UserService implements IUserService {
 
         Integer userIdFromUser = user.getUserID();
 
-        if (userIdFromUser != null) {
-            if (!userIdFromUser.equals(userIdFromToken) && !ROLE_ADMIN.equals(userRoleFromToken)) {
-                throw new UserException("Invalid user details, you can only update your own profile.");
-            }
+        if (userIdFromUser != null && !userIdFromUser.equals(userIdFromToken) && !ROLE_ADMIN.equals(userRoleFromToken)) {
+            throw new UserException("Invalid user details, you can only update your own profile.");
         }
     }
+
 
     private void validateAdminRole(String jwtToken) throws UserException {
         Claims claims = jwtTokenUtil.validateJwtToken(jwtToken);

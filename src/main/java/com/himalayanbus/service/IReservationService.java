@@ -1,4 +1,4 @@
-package com.himalayanbus.service.implementation;
+package com.himalayanbus.service;
 
 import com.himalayanbus.exception.ReservationException;
 import com.himalayanbus.persistence.entity.Reservation;

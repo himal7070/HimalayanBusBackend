@@ -9,6 +9,7 @@ import com.himalayanbus.persistence.entity.Bus;
 import com.himalayanbus.persistence.entity.Reservation;
 import com.himalayanbus.persistence.entity.ReservationDTO;
 import com.himalayanbus.persistence.entity.User;
+import com.himalayanbus.service.IReservationService;
 import io.jsonwebtoken.Claims;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
