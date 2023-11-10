@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface IRouteRepository extends JpaRepository<Route, Integer> {
-    default Route findByRouteScheduled(String from, String to) {
+    default Route findByRouteScheduled() {
         return null;
     }
 

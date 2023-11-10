@@ -25,7 +25,7 @@ public class RouteService implements IRouteService {
     @Override
     @Transactional
     public Route addRoute(Route route) throws RouteException {
-        Route existingRoute = iRouteRepository.findByRouteScheduled(route.getRouteFrom(), route.getRouteTo());
+        Route existingRoute = iRouteRepository.findByRouteScheduled();
         if (existingRoute != null) {
             throw new RouteException("Route: " + existingRoute.getRouteFrom() + " to " + existingRoute.getRouteTo() + " is already present!");
         }

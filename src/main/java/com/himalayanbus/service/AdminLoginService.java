@@ -8,7 +8,6 @@ import com.himalayanbus.persistence.entity.AdminLoginDTO;
 import com.himalayanbus.service.IService.IAdminLoginService;
 import org.springframework.stereotype.Service;
 
-import javax.security.auth.login.LoginException;
 import java.util.List;
 
 @Service
@@ -25,7 +24,7 @@ public class AdminLoginService implements IAdminLoginService {
 
 
     @Override
-    public String adminLogin(AdminLoginDTO loginDTO) throws LoginException, AdminException {
+    public String adminLogin(AdminLoginDTO loginDTO) throws AdminException {
         List<Admin> admins = iAdminRepository.findByEmail(loginDTO.getEmail());
 
         if (admins.isEmpty()) {

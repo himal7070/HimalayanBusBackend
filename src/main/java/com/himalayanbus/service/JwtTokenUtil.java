@@ -16,8 +16,6 @@ import java.util.Map;
 @Component
 public class JwtTokenUtil {
 
-    @Value("${jwt.secret}")
-    private String jwtSecret;
 
     @Value("${jwt.expirationTime}")
     private long jwtExpirationTime;

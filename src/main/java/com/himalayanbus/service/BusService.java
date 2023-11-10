@@ -52,7 +52,7 @@ public class BusService implements IBusService {
             throw new BusException("No bus found with id: " + bus.getBusId());
         }
 
-        Route route = iRouteRepository.findByRouteScheduled(bus.getRouteFrom(), bus.getRouteTo());
+        Route route = iRouteRepository.findByRouteScheduled();
         if (route != null) {
             throw new BusException("A bus on this route has already been scheduled.");
         } else {
@@ -110,7 +110,7 @@ public class BusService implements IBusService {
             throw new BusException("Route information is incomplete.");
         }
 
-        Route existingRoute = iRouteRepository.findByRouteScheduled(routeFrom, routeTo);
+        Route existingRoute = iRouteRepository.findByRouteScheduled();
         if (existingRoute != null) {
             throw new BusException("A bus on this route has already been scheduled.");
         }
