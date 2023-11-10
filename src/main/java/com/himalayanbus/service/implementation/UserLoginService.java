@@ -1,9 +1,9 @@
-package com.himalayanbus.service;
+package com.himalayanbus.service.implementation;
 
 import com.himalayanbus.persistence.repository.IUserRepository;
 import com.himalayanbus.persistence.entity.User;
 import com.himalayanbus.persistence.entity.UserLoginDTO;
-import com.himalayanbus.service.IService.IUserLoginService;
+import com.himalayanbus.service.IUserLoginService;
 import org.springframework.stereotype.Service;
 
 import javax.security.auth.login.LoginException;

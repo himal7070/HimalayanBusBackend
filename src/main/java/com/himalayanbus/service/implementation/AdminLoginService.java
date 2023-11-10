@@ -1,11 +1,11 @@
-package com.himalayanbus.service;
+package com.himalayanbus.service.implementation;
 
 
 import com.himalayanbus.exception.AdminException;
 import com.himalayanbus.persistence.repository.IAdminRepository;
 import com.himalayanbus.persistence.entity.Admin;
 import com.himalayanbus.persistence.entity.AdminLoginDTO;
-import com.himalayanbus.service.IService.IAdminLoginService;
+import com.himalayanbus.service.IAdminLoginService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

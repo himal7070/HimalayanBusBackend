@@ -24,7 +24,7 @@ public class Bus {
     private String busType;
     private String routeFrom;
     private String routeTo;
-    private LocalDate JourneyDate;
+    private LocalDate journeyDate;
     private LocalTime arrivalTime;
     private LocalTime departureTime;
     private Integer totalSeats;

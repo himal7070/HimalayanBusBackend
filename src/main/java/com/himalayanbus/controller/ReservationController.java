@@ -4,7 +4,7 @@ package com.himalayanbus.controller;
 import com.himalayanbus.exception.ReservationException;
 import com.himalayanbus.persistence.entity.Reservation;
 import com.himalayanbus.persistence.entity.ReservationDTO;
-import com.himalayanbus.service.IService.IReservationService;
+import com.himalayanbus.service.implementation.IReservationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

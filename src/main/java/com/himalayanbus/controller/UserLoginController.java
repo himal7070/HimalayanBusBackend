@@ -2,7 +2,7 @@ package com.himalayanbus.controller;
 
 
 import com.himalayanbus.persistence.entity.UserLoginDTO;
-import com.himalayanbus.service.IService.IUserLoginService;
+import com.himalayanbus.service.IUserLoginService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

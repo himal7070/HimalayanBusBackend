@@ -21,21 +21,13 @@ public class Route {
     private String routeTo;
     private Integer distance;
 
-
-
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL)
     private List<Bus> busList;
-
-    {
-        busList = new ArrayList<>();
-    }
-
 
     public Route(String routeFrom, String routeTo, Integer distance) {
         this.routeFrom = routeFrom;
         this.routeTo = routeTo;
         this.distance = distance;
-
-
+        this.busList = new ArrayList<>();
     }
 }

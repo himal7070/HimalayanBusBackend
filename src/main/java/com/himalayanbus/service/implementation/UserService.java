@@ -1,9 +1,9 @@
-package com.himalayanbus.service;
+package com.himalayanbus.service.implementation;
 
 import com.himalayanbus.exception.UserException;
 import com.himalayanbus.persistence.repository.IUserRepository;
 import com.himalayanbus.persistence.entity.User;
-import com.himalayanbus.service.IService.IUserService;
+import com.himalayanbus.service.IUserService;
 import io.jsonwebtoken.Claims;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +15,8 @@ public class UserService implements IUserService {
 
     private final IUserRepository userRepository;
     private final JwtTokenUtil jwtTokenUtil;
+
+    private static final String ROLE_ADMIN = "admin";
 
     public UserService(IUserRepository userRepository, JwtTokenUtil jwtTokenUtil) {
         this.userRepository = userRepository;
@@ -33,19 +35,7 @@ public class UserService implements IUserService {
     @Override
     @Transactional(rollbackFor = UserException.class)
     public User updateUser(User user, String jwtToken) throws UserException {
-        Claims claims = jwtTokenUtil.validateJwtToken(jwtToken);
-
-        Integer userIdFromToken = (Integer) claims.get("sub");
-        String userRoleFromToken = (String) claims.get("role");
-
-        Integer userIdFromUser = user.getUserID();
-
-        if (userIdFromUser != null) {
-            if (!userIdFromUser.equals(userIdFromToken) && !userRoleFromToken.equals("admin")) {
-                throw new UserException("Invalid user details, you can only update your own profile.");
-            }
-        }
-
+        validateUserAndRole(user, jwtToken);
         return userRepository.save(user);
     }
 
@@ -53,11 +43,10 @@ public class UserService implements IUserService {
     @Transactional(rollbackFor = UserException.class)
     public User deleteUser(Integer userID, String jwtToken) throws UserException {
         Claims claims = jwtTokenUtil.validateJwtToken(jwtToken);
-
         Integer userIdFromToken = (Integer) claims.get("sub");
         String userRoleFromToken = (String) claims.get("role");
 
-        if (userIdFromToken.equals(userID) || userRoleFromToken.equals("admin")) {
+        if (userIdFromToken.equals(userID) || ROLE_ADMIN.equals(userRoleFromToken)) {
             User user = getUserById(userID);
             userRepository.delete(user);
             return user;
@@ -66,19 +55,35 @@ public class UserService implements IUserService {
         }
     }
 
-
     @Override
     @Transactional(readOnly = true)
     public List<User> viewAllUsers(String jwtToken) throws UserException {
+        validateAdminRole(jwtToken);
+        List<User> userList = userRepository.findAll();
+        if (userList.isEmpty()) {
+            throw new UserException("No users found!");
+        }
+        return userList;
+    }
+
+    private void validateUserAndRole(User user, String jwtToken) throws UserException {
+        Claims claims = jwtTokenUtil.validateJwtToken(jwtToken);
+        Integer userIdFromToken = (Integer) claims.get("sub");
+        String userRoleFromToken = (String) claims.get("role");
+
+        Integer userIdFromUser = user.getUserID();
+
+        if (userIdFromUser != null) {
+            if (!userIdFromUser.equals(userIdFromToken) && !ROLE_ADMIN.equals(userRoleFromToken)) {
+                throw new UserException("Invalid user details, you can only update your own profile.");
+            }
+        }
+    }
+
+    private void validateAdminRole(String jwtToken) throws UserException {
         Claims claims = jwtTokenUtil.validateJwtToken(jwtToken);
 
-        if (claims.get("role").equals("admin")) {
-            List<User> userList = userRepository.findAll();
-            if (userList.isEmpty()) {
-                throw new UserException("No users found!");
-            }
-            return userList;
-        } else {
+        if (!ROLE_ADMIN.equals(claims.get("role"))) {
             throw new UserException("Only admin has permission to view all users.");
         }
     }
@@ -86,13 +91,4 @@ public class UserService implements IUserService {
     private User getUserById(Integer userID) throws UserException {
         return userRepository.findById(userID).orElseThrow(() -> new UserException("Invalid user ID!"));
     }
-
-
-
-    // "message": "The signing key's size is 112 bits which is not secure enough for the HS512 algorithm.  The JWT JWA Specification (RFC 7518, Section 3.2) states that keys used with HS512 MUST have a size >= 512 bits (the key size must be greater than or equal to the hash output size).  Consider using the io.jsonwebtoken.security.Keys class's 'secretKeyFor(SignatureAlgorithm.HS512)' method to create a key guaranteed to be secure enough for HS512.  See https://tools.ietf.org/html/rfc7518#section-3.2 for more information.",
-//         "details": "uri=/himalayanbus/admin/login"
-
-
 }
-
-

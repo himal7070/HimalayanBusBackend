@@ -2,7 +2,7 @@ package com.himalayanbus.controller;
 
 import com.himalayanbus.exception.BusException;
 import com.himalayanbus.persistence.entity.Bus;
-import com.himalayanbus.service.IService.IBusService;
+import com.himalayanbus.service.IBusService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

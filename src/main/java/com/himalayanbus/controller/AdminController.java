@@ -3,8 +3,8 @@ package com.himalayanbus.controller;
 
 import com.himalayanbus.exception.AdminException;
 import com.himalayanbus.persistence.entity.Admin;
-import com.himalayanbus.service.IService.IAdminService;
-import com.himalayanbus.service.JwtTokenUtil;
+import com.himalayanbus.service.IAdminService;
+import com.himalayanbus.service.implementation.JwtTokenUtil;
 import io.jsonwebtoken.Claims;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,7 +1,9 @@
 package com.himalayanbus.service;
 
-import com.himalayanbus.persistence.repository.IUserRepository;
 import com.himalayanbus.persistence.entity.User;
+import com.himalayanbus.persistence.repository.IUserRepository;
+import com.himalayanbus.service.implementation.JwtTokenUtil;
+import com.himalayanbus.service.implementation.UserService;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -15,7 +17,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 
 @SpringBootTest
 class UserServiceTest {
@@ -66,9 +67,8 @@ class UserServiceTest {
     @Test
     void testDeleteUser() {
         // Arrange
-        Mockito.when(userRepository.findById(eq(1))).thenReturn(Optional.of(new User()));
+        Mockito.when(userRepository.findById(1)).thenReturn(Optional.of(new User()));
         Mockito.doNothing().when(userRepository).delete(any(User.class));
-
 
         Claims claims = Mockito.mock(Claims.class);
         Mockito.when(claims.get("sub")).thenReturn(1);
@@ -79,9 +79,10 @@ class UserServiceTest {
         assertDoesNotThrow(() -> userService.deleteUser(1, "mockJwtToken"));
 
         // Assert and Verify
-        Mockito.verify(userRepository, Mockito.times(1)).findById(eq(1));
+        Mockito.verify(userRepository, Mockito.times(1)).findById(1);
         Mockito.verify(userRepository, Mockito.times(1)).delete(any(User.class));
     }
+
 
     @Test
     void testViewAllUsers() {

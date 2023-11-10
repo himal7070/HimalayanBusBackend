@@ -1,4 +1,4 @@
-package com.himalayanbus.service.IService;
+package com.himalayanbus.service;
 
 import com.himalayanbus.exception.BusException;
 import com.himalayanbus.persistence.entity.Bus;

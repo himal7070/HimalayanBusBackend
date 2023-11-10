@@ -3,7 +3,7 @@ package com.himalayanbus.controller;
 
 import com.himalayanbus.exception.RouteException;
 import com.himalayanbus.persistence.entity.Route;
-import com.himalayanbus.service.IService.IRouteService;
+import com.himalayanbus.service.IRouteService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

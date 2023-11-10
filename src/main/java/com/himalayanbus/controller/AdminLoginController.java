@@ -3,7 +3,7 @@ package com.himalayanbus.controller;
 
 import com.himalayanbus.exception.AdminException;
 import com.himalayanbus.persistence.entity.AdminLoginDTO;
-import com.himalayanbus.service.IService.IAdminLoginService;
+import com.himalayanbus.service.IAdminLoginService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

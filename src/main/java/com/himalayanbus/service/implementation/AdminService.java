@@ -1,9 +1,9 @@
-package com.himalayanbus.service;
+package com.himalayanbus.service.implementation;
 
 import com.himalayanbus.exception.AdminException;
 import com.himalayanbus.persistence.repository.IAdminRepository;
 import com.himalayanbus.persistence.entity.Admin;
-import com.himalayanbus.service.IService.IAdminService;
+import com.himalayanbus.service.IAdminService;
 import io.jsonwebtoken.Claims;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
