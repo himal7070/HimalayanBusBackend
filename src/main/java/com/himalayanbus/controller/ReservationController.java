@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/himalayanbus")
+@RequestMapping("/himalayanbus/reservations")
 public class ReservationController {
 
     private final IReservationService reservationService;
@@ -21,40 +21,65 @@ public class ReservationController {
         this.reservationService = reservationService;
     }
 
-    @PostMapping("/reservations")
-    public ResponseEntity<Reservation> addReservation(@RequestBody ReservationDTO dto, @RequestHeader("Authorization") String jwtToken) throws ReservationException {
-        Reservation reservation = reservationService.addReservation(dto, jwtToken);
-        return new ResponseEntity<>(reservation, HttpStatus.CREATED);
+    @PostMapping("/add")
+    public ResponseEntity<Reservation> addReservation(@RequestBody ReservationDTO dto, @RequestHeader("Authorization") String jwtToken) {
+        try {
+            Reservation reservation = reservationService.addReservation(dto, jwtToken);
+            return new ResponseEntity<>(reservation, HttpStatus.CREATED);
+        } catch (ReservationException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
-    @PutMapping("/reservations/{reservationID}")
-    public ResponseEntity<Reservation> updateReservation(@RequestBody ReservationDTO dto, @RequestHeader("Authorization") String jwtToken, @PathVariable Integer reservationID) throws ReservationException {
-        Reservation reservation = reservationService.updateReservation(reservationID, dto, jwtToken);
-        return new ResponseEntity<>(reservation, HttpStatus.OK);
+    @PutMapping("/update/{rid}")
+    public ResponseEntity<Reservation> updateReservation(@PathVariable Integer rid, @RequestBody ReservationDTO dto, @RequestHeader("Authorization") String jwtToken) {
+        try {
+            Reservation reservation = reservationService.updateReservation(rid, dto, jwtToken);
+            return new ResponseEntity<>(reservation, HttpStatus.OK);
+        } catch (ReservationException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
-    @DeleteMapping("/reservations/{reservationID}")
-    public ResponseEntity<Reservation> deleteReservation(@RequestHeader("Authorization") String jwtToken, @PathVariable Integer reservationID) throws ReservationException {
-        Reservation reservation = reservationService.deleteReservation(reservationID, jwtToken);
-        return new ResponseEntity<>(reservation, HttpStatus.ACCEPTED);
+    @GetMapping("/viewReservation/{rid}")
+    public ResponseEntity<Reservation> viewReservation(@PathVariable Integer rid, @RequestHeader("Authorization") String jwtToken) {
+        try {
+            Reservation reservation = reservationService.viewReservation(rid, jwtToken);
+            return new ResponseEntity<>(reservation, HttpStatus.OK);
+        } catch (ReservationException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
-    @GetMapping("/reservations/{reservationID}")
-    public ResponseEntity<Reservation> viewReservationById(@PathVariable Integer reservationID, @RequestHeader("Authorization") String jwtToken) throws ReservationException {
-        Reservation reservation = reservationService.viewReservationByRID(reservationID, jwtToken);
-        return new ResponseEntity<>(reservation, HttpStatus.OK);
+    @GetMapping("/all")
+    public ResponseEntity<List<Reservation>> getAllReservations(@RequestHeader("Authorization") String jwtToken) {
+        try {
+            List<Reservation> reservations = reservationService.getAllReservation(jwtToken);
+            return new ResponseEntity<>(reservations, HttpStatus.OK);
+        } catch (ReservationException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
-    @GetMapping("/reservations/all")
-    public ResponseEntity<List<Reservation>> viewAllReservations(@RequestHeader("Authorization") String jwtToken) throws ReservationException {
-        List<Reservation> reservations = reservationService.getAllReservation(jwtToken);
-        return new ResponseEntity<>(reservations, HttpStatus.OK);
+    @GetMapping("/user/{uid}")
+    public ResponseEntity<List<Reservation>> viewReservationsByUserId(@PathVariable Integer uid, @RequestHeader("Authorization") String jwtToken) {
+        try {
+            List<Reservation> reservations = reservationService.viewReservationByUerId(uid, jwtToken);
+            return new ResponseEntity<>(reservations, HttpStatus.OK);
+        } catch (ReservationException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
-    @GetMapping("/reservations/user/{userID}")
-    public ResponseEntity<List<Reservation>> viewReservationByUserId(@PathVariable Integer userID, @RequestHeader("Authorization") String jwtToken) throws ReservationException {
-        List<Reservation> reservations = reservationService.viewReservationByUserId(userID, jwtToken);
-        return new ResponseEntity<>(reservations, HttpStatus.OK);
+    @DeleteMapping("/delete/{rid}")
+    public ResponseEntity<String> deleteReservation(@PathVariable Integer rid, @RequestHeader("Authorization") String jwtToken) {
+        try {
+            Reservation deletedReservation = reservationService.deleteReservation(rid, jwtToken);
+            return new ResponseEntity<>("Reservation with ID " + deletedReservation.getReservationID() + " deleted.", HttpStatus.OK);
+        } catch (ReservationException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
+
 
 }

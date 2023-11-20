@@ -30,4 +30,14 @@ public class Route {
         this.distance = distance;
         this.busList = new ArrayList<>();
     }
+
+    public List<Bus> getBusList() {
+        if (busList == null) {
+            busList = new ArrayList<>();
+        }
+        return busList;
+    }
+
+
+
 }

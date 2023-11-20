@@ -22,6 +22,8 @@ public class Reservation {
 
     private String status;
 
+    private String type;
+
     private LocalDate date;
 
     private LocalTime time;

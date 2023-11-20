@@ -6,11 +6,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface IAdminService {
 
+
     @Transactional
     Admin createAdmin(Admin admin) throws AdminException;
 
     @Transactional
-    Admin updateAdmin(Admin admin, String jwtToken) throws AdminException;
+    Admin updateAdmin(Admin admin, Integer adminID) throws AdminException;
 
 
 }

@@ -7,7 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -22,16 +24,33 @@ public class User {
 
     private String lastName;
 
+    private String userName;
+
     private String phoneNumber;
 
     private String email;
 
     private String password;
 
-    private String role;
 
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Reservation> reservationList = new ArrayList<>();
+
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
+
+
+    @OneToOne
+    private Reservation reservation;
+
+
+
 
 }

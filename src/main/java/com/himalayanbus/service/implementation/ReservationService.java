@@ -2,15 +2,14 @@ package com.himalayanbus.service.implementation;
 
 
 import com.himalayanbus.exception.ReservationException;
-import com.himalayanbus.persistence.repository.IBusRepository;
-import com.himalayanbus.persistence.repository.IReservationRepository;
-import com.himalayanbus.persistence.repository.IUserRepository;
 import com.himalayanbus.persistence.entity.Bus;
 import com.himalayanbus.persistence.entity.Reservation;
 import com.himalayanbus.persistence.entity.ReservationDTO;
 import com.himalayanbus.persistence.entity.User;
+import com.himalayanbus.persistence.repository.IBusRepository;
+import com.himalayanbus.persistence.repository.IReservationRepository;
+import com.himalayanbus.persistence.repository.IUserRepository;
 import com.himalayanbus.service.IReservationService;
-import io.jsonwebtoken.Claims;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,35 +21,87 @@ import java.util.Optional;
 @Service
 public class ReservationService implements IReservationService {
 
+    private final IReservationRepository reservationRepository;
+    private final IBusRepository busRepository;
+    private final IUserRepository userRepository;
 
-    private final IReservationRepository iReservationRepository;
-    private final IBusRepository iBusRepository;
-    private final IUserRepository iUserRepository;
-    private final JwtTokenUtil jwtTokenUtil;
 
-    public ReservationService(IReservationRepository iReservationRepository, IBusRepository iBusRepository, IUserRepository iUserRepository, JwtTokenUtil jwtTokenUtil) {
-        this.iReservationRepository = iReservationRepository;
-        this.iBusRepository = iBusRepository;
-        this.iUserRepository = iUserRepository;
-        this.jwtTokenUtil = jwtTokenUtil;
+    public ReservationService(IReservationRepository reservationRepository, IBusRepository busRepository, IUserRepository userRepository) {
+        this.reservationRepository = reservationRepository;
+        this.busRepository = busRepository;
+        this.userRepository = userRepository;
     }
 
-    private Bus findBusByRoute(String departureLocation, String destination) {
-        return iBusRepository.findByRouteFromAndRouteTo(departureLocation, destination);
-    }
 
-    @Transactional
     @Override
+    @Transactional
     public Reservation addReservation(ReservationDTO dto, String jwtToken) throws ReservationException {
-        User user = authenticateUser(jwtToken);
-        Bus bus = findBusByRoute(dto.getDepartureLocation(), dto.getDestination());
-        updateAvailableSeats(bus, dto.getBookedSeat());
+        Integer userId = extractUserIdFromToken(jwtToken);
+        User user = getUserFromToken(userId);
 
+        Bus bus = findBusByLocations(dto.getDepartureLocation(), dto.getDestination());
+
+        Integer availableSeats = bus.getAvailableSeats();
+
+        if (availableSeats < dto.getBookedSeat()) throw new ReservationException("Only " + availableSeats + " seats are available");
+
+        availableSeats -= dto.getBookedSeat();
+        bus.setAvailableSeats(availableSeats);
+
+        Reservation reservation = createReservation(dto, user, bus);
+
+        return reservationRepository.save(reservation);
+    }
+
+    @Override
+    @Transactional
+    public Reservation updateReservation(Integer rid, ReservationDTO dto, String jwtToken) throws ReservationException {
+        authenticateUser(jwtToken);
+
+        Bus bus = findBusByLocations(dto.getDepartureLocation(), dto.getDestination());
+
+        Optional<Reservation> optional = reservationRepository.findById(rid);
+
+        if (optional.isEmpty()) throw new ReservationException("Reservation not found with the given id: " + rid);
+
+        Reservation reservation = optional.get();
+
+        Integer availableSeats = bus.getAvailableSeats();
+
+        if (availableSeats < dto.getBookedSeat()) throw new ReservationException("Only " + availableSeats + " seats are available");
+
+        availableSeats -= dto.getBookedSeat();
+        bus.setAvailableSeats(availableSeats);
+
+        updateReservationDetails(dto, bus, reservation);
+
+        return reservationRepository.save(reservation);
+    }
+
+
+    private Bus findBusByLocations(String departureLocation, String destination) throws ReservationException {
+        Bus bus = busRepository.findByRouteFromAndRouteTo(departureLocation, destination);
+
+        if (bus == null) throw new ReservationException("Bus not found for the given starting to destination");
+
+        return bus;
+    }
+
+
+    // Utility method to get user from token
+    private User getUserFromToken(Integer userId) throws ReservationException {
+        Optional<User> optional = userRepository.findById(userId);
+
+        if (optional.isEmpty()) throw new ReservationException("User not found with the provided token");
+
+        return optional.get();
+    }
+
+    // Utility method to create a new Reservation
+    private Reservation createReservation(ReservationDTO dto, User user, Bus bus) throws ReservationException {
         Reservation reservation = new Reservation();
 
-        if (dto.getJourneyDate().isBefore(LocalDate.now())) {
-            throw new ReservationException("Journey date should be in the future");
-        }
+        if (dto.getJourneyDate().isBefore(LocalDate.now())) throw new ReservationException("Journey Date should be in the future");
 
         reservation.setDepartureLocation(dto.getDepartureLocation());
         reservation.setDestination(dto.getDestination());
@@ -64,23 +115,11 @@ public class ReservationService implements IReservationService {
         reservation.setBookedSeat(dto.getBookedSeat());
         reservation.setUser(user);
 
-        return iReservationRepository.save(reservation);
+        return reservation;
     }
 
-    @Transactional
-    @Override
-    public Reservation updateReservation(Integer rid, ReservationDTO dto, String jwtToken) throws ReservationException {
-        authenticateUser(jwtToken);
-        Bus bus = findBusByRoute(dto.getDepartureLocation(), dto.getDestination());
-        updateAvailableSeats(bus, dto.getBookedSeat());
-
-        Optional<Reservation> optionalReservation = iReservationRepository.findById(rid);
-
-        if (optionalReservation.isEmpty()) {
-            throw new ReservationException("Reservation not found with the given id: " + rid);
-        }
-
-        Reservation reservation = optionalReservation.get();
+    // Utility method to update reservation details
+    private void updateReservationDetails(ReservationDTO dto, Bus bus, Reservation reservation) {
         reservation.setBookedSeat(dto.getBookedSeat());
         reservation.setBus(bus);
         reservation.setDate(dto.getJourneyDate());
@@ -90,123 +129,107 @@ public class ReservationService implements IReservationService {
         reservation.setDepartureLocation(dto.getDepartureLocation());
         reservation.setDate(LocalDate.now());
         reservation.setTime(LocalTime.now());
-
-        iReservationRepository.save(reservation);
-
-        return reservation;
     }
 
+
+
+
+
+    @Override
     @Transactional
-    @Override
-    public Reservation deleteReservation(Integer rid, String jwtToken) throws ReservationException {
+    public Reservation viewReservation(Integer rid, String jwtToken) throws ReservationException {
         authenticateUser(jwtToken);
 
-        Optional<Reservation> optionalReservation = iReservationRepository.findById(rid);
+        Optional<Reservation> optional = reservationRepository.findById(rid);
 
-        if (optionalReservation.isEmpty()) {
-            throw new ReservationException("Reservation not found with the given id: " + rid);
-        }
+        if(optional.isEmpty()) throw new ReservationException("Reservation with given id is not found");
 
-        Reservation reservation = optionalReservation.get();
-
-        if (reservation.getJourneyDate().isBefore(LocalDate.now())) {
-            throw new ReservationException("Reservation has already expired");
-        }
-
-        updateAvailableSeats(reservation.getBus(), reservation.getBookedSeat());
-
-        iReservationRepository.delete(reservation);
-
-        return reservation;
+        return optional.get();
     }
 
-    @Transactional(readOnly = true)
     @Override
-    public Reservation viewReservationByRID(Integer reservationID, String jwtToken) throws ReservationException {
-        authenticateUser(jwtToken);
-
-        Optional<Reservation> optionalReservation = iReservationRepository.findById(reservationID);
-
-        if (optionalReservation.isEmpty()) {
-            throw new ReservationException("Reservation with given id is not found");
-        }
-
-        return optionalReservation.get();
-    }
-
-    @Transactional(readOnly = true)
-    @Override
+    @Transactional
     public List<Reservation> getAllReservation(String jwtToken) throws ReservationException {
         authenticateUser(jwtToken);
 
-        List<Reservation> list = iReservationRepository.findAll();
+        List<Reservation> list = reservationRepository.findAll();
 
-        if (list.isEmpty()) {
-            throw new ReservationException("No reservations found");
-        }
+        if(list.isEmpty()) throw new ReservationException("Reservation Not found");
 
         return list;
     }
 
-    @Transactional(readOnly = true)
     @Override
-    public List<Reservation> viewReservationByUserId(Integer userID, String jwtToken) throws ReservationException {
+    @Transactional
+    public List<Reservation> viewReservationByUerId(Integer uid, String jwtToken) throws ReservationException {
         authenticateUser(jwtToken);
 
-        Optional<User> optionalUser = iUserRepository.findById(userID);
+        Optional<User> optional = userRepository.findById(uid);
 
-        if (optionalUser.isEmpty()) {
-            throw new ReservationException("User not found with the given user ID: " + userID);
-        }
+        if(optional.isEmpty()) throw new ReservationException("User not find with given user id: " + uid);
 
-        User requestedUser = optionalUser.get();
-        List<Reservation> reservations = requestedUser.getReservationList();
+        User user = optional.get();
 
-        if (reservations.isEmpty()) {
-            throw new ReservationException("No reservations found for this user");
-        }
+        List<Reservation> reservations = user.getReservationList();
+
+        if(reservations.isEmpty()) throw new ReservationException("Reservation not found for this user");
 
         return reservations;
     }
 
+    @Override
+    @Transactional
+    public Reservation deleteReservation(Integer rid, String jwtToken) throws ReservationException {
+        authenticateUser(jwtToken);
+
+        Optional<Reservation> optional =  reservationRepository.findById(rid);
+
+        if(optional.isEmpty()) throw new ReservationException("Reservation not found with the given id: " + rid);
+
+        Reservation reservation = optional.get();
+
+        if(reservation.getJourneyDate().isBefore(LocalDate.now())) throw new ReservationException("Reservation Already Expired");
+
+        Integer n = reservation.getBus().getAvailableSeats();
+
+        reservation.getBus().setAvailableSeats(n + reservation.getBookedSeat());
+
+        Bus bus = reservation.getBus();
+
+        busRepository.save(bus);
+        reservationRepository.delete(reservation);
+
+        return reservation;
+    }
 
 
 
+    private void authenticateUser(String jwtToken) throws ReservationException {
+        Integer userId = extractUserIdFromToken(jwtToken);
+        Optional<User> optional = userRepository.findById(userId);
 
-    private void updateAvailableSeats(Bus bus, int bookedSeats) throws ReservationException {
-        int availableSeats = bus.getAvailableSeats();
-        if (availableSeats < bookedSeats) {
-            throw new ReservationException("Insufficient available seats");
-        }
-        availableSeats -= bookedSeats;
-        bus.setAvailableSeats(availableSeats);
-        iBusRepository.save(bus);
+        if(optional.isEmpty()) throw new ReservationException("User not found with the provided token");
+    }
+
+
+    private Integer extractUserIdFromToken(String jwtToken) {
+        // Logic to extract and decode JWT token to get user ID
+        // This implementation might involve using libraries like jjwt or Spring Security's JwtDecoder
+        // For example:
+        // Jwt jwt = jwtDecoder.decode(jwtToken);
+        // return jwt.getClaim("userId").asInteger();
+        return 1; // Placeholder, replace with actual logic to extract user ID
     }
 
 
 
 
 
-    // -------------------------- Helper method to authenticate a user using JWT --------------------------
 
 
-    private User authenticateUser(String jwtToken) throws ReservationException {
-        Claims claims = jwtTokenUtil.validateJwtToken(jwtToken);
 
-        Integer userId = (Integer) claims.get("sub");
 
-        if (userId == null) {
-            throw new ReservationException("Invalid or missing user ID in the token.");
-        }
 
-        Optional<User> optionalUser = iUserRepository.findById(userId);
-
-        if (optionalUser.isEmpty()) {
-            throw new ReservationException("User not found with the provided token.");
-        }
-
-        return optionalUser.get();
-    }
 
 
 

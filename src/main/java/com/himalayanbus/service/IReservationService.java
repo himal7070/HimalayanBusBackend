@@ -9,21 +9,22 @@ import java.util.List;
 
 public interface IReservationService {
 
+
     @Transactional
     Reservation addReservation(ReservationDTO dto, String jwtToken) throws ReservationException;
 
     @Transactional
-    Reservation updateReservation(Integer rid, ReservationDTO dto, String jwtToken) throws ReservationException;
+    Reservation viewReservation(Integer rid, String jwtToken) throws ReservationException;
+
+    @Transactional
+    List<Reservation> getAllReservation(String jwtToken) throws ReservationException;
+
+    @Transactional
+    List<Reservation> viewReservationByUerId(Integer uid, String jwtToken) throws ReservationException;
 
     @Transactional
     Reservation deleteReservation(Integer rid, String jwtToken) throws ReservationException;
 
-    @Transactional(readOnly = true)
-    Reservation viewReservationByRID(Integer reservationID, String jwtToken) throws ReservationException;
-
-    @Transactional(readOnly = true)
-    List<Reservation> getAllReservation(String jwtToken) throws ReservationException;
-
-    @Transactional(readOnly = true)
-    List<Reservation> viewReservationByUserId(Integer userID, String jwtToken) throws ReservationException;
+    @Transactional
+    Reservation updateReservation(Integer rid, ReservationDTO dto, String jwtToken) throws ReservationException;
 }

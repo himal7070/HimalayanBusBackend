@@ -5,6 +5,7 @@ stages:
     - build
     - test
     - sonarqube-check
+    - sonarqube-vulnerability-report
 
 build:
     stage: build
@@ -15,6 +16,8 @@ test:
     stage: test
     script:
       - ./gradlew test
+
+
 
 sonarqube-check:
   stage: sonarqube-check
@@ -33,3 +36,20 @@ sonarqube-check:
     - master
     - main
     - develop
+
+sonarqube-vulnerability-report:
+  stage: sonarqube-vulnerability-report
+  script:
+    - 'curl -u "${SONAR_TOKEN}:" "${SONAR_HOST_URL}/api/issues/gitlab_sast_export?projectKey=I356260_busticketreservationsystem_AYtw61yIcD8O0WYjuNcc&branch=${CI_COMMIT_BRANCH}&pullRequest=${CI_MERGE_REQUEST_IID}" -o gl-sast-sonar-report.json'
+  allow_failure: true
+  only:
+    - merge_requests
+    - master
+    - main
+    - develop
+  artifacts:
+    expire_in: 1 day
+    reports:
+      sast: gl-sast-sonar-report.json
+  dependencies:
+    - sonarqube-check

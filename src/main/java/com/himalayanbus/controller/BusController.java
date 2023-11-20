@@ -3,6 +3,7 @@ package com.himalayanbus.controller;
 import com.himalayanbus.exception.BusException;
 import com.himalayanbus.persistence.entity.Bus;
 import com.himalayanbus.service.IBusService;
+import jakarta.annotation.security.RolesAllowed;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,54 +11,83 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/himalayanbus")
+@RequestMapping("/himalayanbus/bus")
 public class BusController {
 
     private final IBusService busService;
-    public BusController(IBusService busService)
-    {
+
+    public BusController(IBusService busService) {
         this.busService = busService;
     }
 
-    @PostMapping("/bus/add")
-    public ResponseEntity<Bus> addBusHandler(@RequestBody Bus bus)throws BusException {
-
-        Bus addedBus = busService.addBus(bus);
-        return new ResponseEntity<>(addedBus, HttpStatus.CREATED);
+    @PostMapping("/add")
+    @RolesAllowed("ADMIN")
+    public ResponseEntity<Bus> addBus(@RequestBody Bus bus) {
+        try {
+            Bus createdBus = busService.addBus(bus);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdBus);
+        } catch (BusException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
     }
 
-    @GetMapping("/bus/view all")
-    public ResponseEntity<List<Bus>> getAllBusesHandler()throws BusException{
+    @GetMapping("/viewAll")
+    @RolesAllowed("ADMIN")
+    public ResponseEntity<List<Bus>> viewAllBuses() {
+        try {
+            List<Bus> busList = busService.viewAllBus();
+            return ResponseEntity.status(HttpStatus.OK).body(busList);
+        } catch (BusException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
 
-        List<Bus> allBuses = busService.viewAllBuses();
-        return new ResponseEntity<>(allBuses,HttpStatus.OK);
+    @PutMapping("/update/{busId}")
+    @RolesAllowed("ADMIN")
+    public ResponseEntity<Bus> updateBus(@PathVariable Integer busId, @RequestBody Bus newBusDetails) {
+        try {
+            Bus updatedBus = busService.updateBus(busId, newBusDetails);
+            return ResponseEntity.status(HttpStatus.OK).body(updatedBus);
+        } catch (BusException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
+
+    @DeleteMapping("/delete/{busId}")
+    @RolesAllowed("ADMIN")
+    public ResponseEntity<String> deleteBus(@PathVariable Integer busId) {
+        try {
+            busService.deleteBus(busId);
+            return ResponseEntity.status(HttpStatus.OK).body("Bus deleted successfully");
+        } catch (BusException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Bus not found");
+        }
 
     }
 
-    @PutMapping("/bus/update")
-    public ResponseEntity<Bus> updateBusHandler(@RequestBody Bus bus) throws BusException{
 
-        Bus newBus = busService.updateBus(bus);
-        return new ResponseEntity<>(newBus,HttpStatus.OK);
-
+    @GetMapping("/type/{busType}")
+    @RolesAllowed("ADMIN")
+    public ResponseEntity<List<Bus>> viewBusByType(@PathVariable String busType) {
+        try {
+            List<Bus> busList = busService.viewBusByType(busType);
+            return ResponseEntity.status(HttpStatus.OK).body(busList);
+        } catch (BusException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
-    @DeleteMapping("/bus/delete/{busId}")
-    public ResponseEntity<Bus> deleteBusByBusIdHandler(@PathVariable("busId") Integer busId) throws BusException{
-
-        Bus deletedBus = busService.deleteBus(busId);
-        return new ResponseEntity<>(deletedBus,HttpStatus.OK);
-
+    @GetMapping("viewBus/{busId}")
+    @RolesAllowed("ADMIN")
+    public ResponseEntity<Bus> viewBus(@PathVariable Integer busId) {
+        try {
+            Bus bus = busService.viewBus(busId);
+            return ResponseEntity.status(HttpStatus.OK).body(bus);
+        } catch (BusException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
-
-    @GetMapping("/bus/bus-type/{busType}")
-    public ResponseEntity<List<Bus>> getBusesByBusTypeHandler(@PathVariable("busType") String busType) throws BusException{
-
-        List<Bus> busList = busService.viewBusType(busType);
-        return new ResponseEntity<>(busList,HttpStatus.OK);
-
-    }
-
 
 
 }

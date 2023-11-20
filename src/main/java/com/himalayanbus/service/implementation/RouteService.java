@@ -1,80 +1,105 @@
 package com.himalayanbus.service.implementation;
 
 import com.himalayanbus.exception.RouteException;
-import com.himalayanbus.persistence.repository.IRouteRepository;
 import com.himalayanbus.persistence.entity.Route;
+import com.himalayanbus.persistence.repository.IRouteRepository;
 import com.himalayanbus.service.IRouteService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class RouteService implements IRouteService {
 
-    private final IRouteRepository iRouteRepository;
+    private final IRouteRepository routeRepository;
 
     public RouteService(IRouteRepository iRouteRepository)
     {
-        this.iRouteRepository = iRouteRepository;
+        this.routeRepository = iRouteRepository;
     }
 
 
 
     @Override
     @Transactional
-    public Route addRoute(Route route) throws RouteException {
-        Route existingRoute = iRouteRepository.findByRouteScheduled();
+    public Route addRoute(Route newRoute) throws RouteException {
+        Route existingRoute = routeRepository.findByRouteFromAndRouteTo(newRoute.getRouteFrom(), newRoute.getRouteTo());
         if (existingRoute != null) {
-            throw new RouteException("Route: " + existingRoute.getRouteFrom() + " to " + existingRoute.getRouteTo() + " is already present!");
+            throw new RouteException("Route from " + newRoute.getRouteFrom() + " to " + newRoute.getRouteTo() + " already exists");
         }
 
-        return iRouteRepository.save(route);
+        newRoute.setBusList(new ArrayList<>());
+        return routeRepository.save(newRoute);
     }
 
 
 
     @Override
+    @Transactional
     public List<Route> viewAllRoutes() throws RouteException {
-        List<Route> routes = iRouteRepository.findAll();
-        if (routes.isEmpty()) {
-            throw new RouteException("There are no routes available at the moment");
+        List<Route> routeList = routeRepository.findAll();
+        if (routeList.isEmpty()) {
+            throw new RouteException("Route list is empty");
+        } else {
+            return routeList;
         }
-        return routes;
     }
 
 
 
     @Override
     @Transactional
-    public Route updateRoute(Route route) throws RouteException {
-        Optional<Route> existingRoute = iRouteRepository.findById(route.getRouteID());
-        if (existingRoute.isPresent()) {
-            Route presentRoute = existingRoute.get();
-            if (!presentRoute.getBusList().isEmpty()) {
-                throw new RouteException("Route cannot be updated; a bus in this route has already been scheduled");
+    public Route updateRoute(Integer routeId, Route updatedRoute) throws RouteException {
+        Optional<Route> optionalRoute = routeRepository.findById(routeId);
+        if (optionalRoute.isPresent()) {
+            Route existingRoute = optionalRoute.get();
+            if (!existingRoute.getBusList().isEmpty()) {
+                throw new RouteException("Cannot update Route! Buses are already scheduled for this route");
             }
-            return iRouteRepository.save(route);
+            if (updatedRoute.getDistance() != null) existingRoute.setDistance(updatedRoute.getDistance());
+            if (updatedRoute.getRouteFrom() != null) existingRoute.setRouteFrom(updatedRoute.getRouteFrom());
+            if (updatedRoute.getRouteTo() != null) existingRoute.setRouteTo(updatedRoute.getRouteTo());
+
+            return routeRepository.save(existingRoute);
         } else {
-            throw new RouteException("Route not found with this routeId: " + route.getRouteID());
+            throw new RouteException("No route exists with ID: " + routeId);
         }
     }
+
 
 
 
     @Override
     @Transactional
-    public Route deleteRoute(int routeID) throws RouteException {
-        Optional<Route> route = iRouteRepository.findById(routeID);
-        if (route.isPresent()) {
-            Route existingRoute = route.get();
-            iRouteRepository.delete(existingRoute);
-            return existingRoute;
+    public Route deleteRoute(Integer routeId) throws RouteException {
+        Optional<Route> optionalRoute = routeRepository.findById(routeId);
+        if (optionalRoute.isPresent()) {
+            Route routeToDelete = optionalRoute.get();
+            if (!routeToDelete.getBusList().isEmpty()) {
+                throw new RouteException("Cannot delete Route! Buses are already scheduled for this route");
+            }
+            routeRepository.delete(routeToDelete);
+            return routeToDelete;
         } else {
-            throw new RouteException("Route not found with this id: " + routeID);
+            throw new RouteException("No route found with ID: " + routeId);
         }
     }
+
+
+    @Override
+    @Transactional
+    public Route viewRoute(Integer routeId) throws RouteException {
+        Optional<Route> optionalRoute = routeRepository.findById(routeId);
+        if (optionalRoute.isPresent()) {
+            return optionalRoute.get();
+        } else {
+            throw new RouteException("No route found with ID: " + routeId);
+        }
+    }
+
 
 
 }
