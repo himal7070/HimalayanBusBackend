@@ -11,14 +11,14 @@ public interface IBusService {
     Bus addBus(Bus bus) throws BusException;
 
     @Transactional
-    Bus updateBus(Integer busId, Bus newBusDetails) throws BusException;
+    Bus updateBus(Long busId, Bus newBusDetails) throws BusException;
 
 
     @Transactional
-    Bus deleteBus(Integer busId) throws BusException;
+    Bus deleteBus(Long busId) throws BusException;
 
     @Transactional
-    Bus viewBus(Integer busId) throws BusException;
+    Bus viewBus(Long busId) throws BusException;
 
     @Transactional
     List<Bus> viewBusByType(String busType) throws BusException;

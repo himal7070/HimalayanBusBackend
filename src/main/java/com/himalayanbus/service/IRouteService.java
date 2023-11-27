@@ -16,11 +16,11 @@ public interface IRouteService {
 
 
     @Transactional
-    Route updateRoute(Integer routeId, Route updatedRoute) throws RouteException;
+    Route updateRoute(Route updatedRoute) throws RouteException;
 
     @Transactional
-    Route deleteRoute(Integer routeId) throws RouteException;
+    Route deleteRoute(Long routeId) throws RouteException;
 
     @Transactional
-    Route viewRoute(Integer routeId) throws RouteException;
+    Route viewRoute(Long routeId) throws RouteException;
 }

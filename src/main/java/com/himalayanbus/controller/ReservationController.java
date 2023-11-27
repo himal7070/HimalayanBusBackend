@@ -5,6 +5,7 @@ import com.himalayanbus.exception.ReservationException;
 import com.himalayanbus.persistence.entity.Reservation;
 import com.himalayanbus.persistence.entity.ReservationDTO;
 import com.himalayanbus.service.IReservationService;
+import jakarta.annotation.security.RolesAllowed;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,72 +13,86 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/himalayanbus/reservations")
+@RequestMapping("/himalayanbus/reservation")
 public class ReservationController {
 
     private final IReservationService reservationService;
 
+
+
     public ReservationController(IReservationService reservationService) {
         this.reservationService = reservationService;
+
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Reservation> addReservation(@RequestBody ReservationDTO dto, @RequestHeader("Authorization") String jwtToken) {
+    @RolesAllowed("USER")
+    public ResponseEntity<Reservation> addReservation(@RequestBody ReservationDTO dto) {
         try {
-            Reservation reservation = reservationService.addReservation(dto, jwtToken);
-            return new ResponseEntity<>(reservation, HttpStatus.CREATED);
+            Reservation reservation = reservationService.addReservation(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(reservation);
         } catch (ReservationException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
 
-    @PutMapping("/update/{rid}")
-    public ResponseEntity<Reservation> updateReservation(@PathVariable Integer rid, @RequestBody ReservationDTO dto, @RequestHeader("Authorization") String jwtToken) {
+
+    @PutMapping("/update/{reservationId}")
+    @RolesAllowed("USER")
+    public ResponseEntity<Reservation> updateReservation(
+            @PathVariable Long reservationId,
+            @RequestBody ReservationDTO dto
+    ) {
         try {
-            Reservation reservation = reservationService.updateReservation(rid, dto, jwtToken);
-            return new ResponseEntity<>(reservation, HttpStatus.OK);
+            Reservation updatedReservation = reservationService.updateReservation(reservationId, dto);
+            return ResponseEntity.ok(updatedReservation);
         } catch (ReservationException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
-    @GetMapping("/viewReservation/{rid}")
-    public ResponseEntity<Reservation> viewReservation(@PathVariable Integer rid, @RequestHeader("Authorization") String jwtToken) {
+
+    @GetMapping("/viewReservation/{reservationId}")
+    @RolesAllowed("USER")
+    public ResponseEntity<Reservation> viewReservation(@PathVariable Long reservationId) {
         try {
-            Reservation reservation = reservationService.viewReservation(rid, jwtToken);
-            return new ResponseEntity<>(reservation, HttpStatus.OK);
+            Reservation reservation = reservationService.viewReservation(reservationId);
+            return ResponseEntity.status(HttpStatus.OK).body(reservation);
         } catch (ReservationException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<Reservation>> getAllReservations(@RequestHeader("Authorization") String jwtToken) {
+    @RolesAllowed("Admin")
+    public ResponseEntity<List<Reservation>> getAllReservations() {
         try {
-            List<Reservation> reservations = reservationService.getAllReservation(jwtToken);
+            List<Reservation> reservations = reservationService.getAllReservation();
+            return ResponseEntity.status(HttpStatus.OK).body(reservations);
+        } catch (ReservationException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping("/current-user")
+    @RolesAllowed("USER")
+    public ResponseEntity<List<Reservation>> viewReservationsForCurrentUser() {
+        try {
+            List<Reservation> reservations = reservationService.viewReservationsForCurrentUser();
             return new ResponseEntity<>(reservations, HttpStatus.OK);
         } catch (ReservationException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
-    @GetMapping("/user/{uid}")
-    public ResponseEntity<List<Reservation>> viewReservationsByUserId(@PathVariable Integer uid, @RequestHeader("Authorization") String jwtToken) {
+    @DeleteMapping("/delete/{reservationId}")
+    @RolesAllowed("USER")
+    public ResponseEntity<Reservation> deleteReservation(@PathVariable Long reservationId) {
         try {
-            List<Reservation> reservations = reservationService.viewReservationByUerId(uid, jwtToken);
-            return new ResponseEntity<>(reservations, HttpStatus.OK);
+            Reservation reservation = reservationService.deleteReservation(reservationId);
+            return ResponseEntity.status(HttpStatus.OK).body(reservation);
         } catch (ReservationException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-    @DeleteMapping("/delete/{rid}")
-    public ResponseEntity<String> deleteReservation(@PathVariable Integer rid, @RequestHeader("Authorization") String jwtToken) {
-        try {
-            Reservation deletedReservation = reservationService.deleteReservation(rid, jwtToken);
-            return new ResponseEntity<>("Reservation with ID " + deletedReservation.getReservationID() + " deleted.", HttpStatus.OK);
-        } catch (ReservationException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
 

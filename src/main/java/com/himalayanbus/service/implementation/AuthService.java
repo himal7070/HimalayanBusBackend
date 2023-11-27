@@ -2,94 +2,68 @@ package com.himalayanbus.service.implementation;
 
 
 import com.himalayanbus.dtos.AuthResponse;
-import com.himalayanbus.persistence.entity.Admin;
-import com.himalayanbus.persistence.entity.Role;
+import com.himalayanbus.dtos.LoginRequest;
+import com.himalayanbus.exception.InvalidCredentialsException;
 import com.himalayanbus.persistence.entity.User;
-import com.himalayanbus.persistence.repository.IAdminRepository;
 import com.himalayanbus.persistence.repository.IUserRepository;
 import com.himalayanbus.security.token.AccessTokenEncoder;
 import com.himalayanbus.security.token.impl.AccessTokenImpl;
 import com.himalayanbus.service.IAuthService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.security.sasl.AuthenticationException;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 
 @Service
 public class AuthService implements IAuthService {
 
     private final IUserRepository userRepository;
-    private final IAdminRepository adminRepository;
     private final AccessTokenEncoder accessTokenEncoder;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthService(IUserRepository userRepository, IAdminRepository adminRepository, AccessTokenEncoder accessTokenEncoder) {
+
+
+
+
+    public AuthService(IUserRepository userRepository, AccessTokenEncoder accessTokenEncoder, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.adminRepository = adminRepository;
         this.accessTokenEncoder = accessTokenEncoder;
+        this.passwordEncoder = passwordEncoder;
     }
-
-
 
     @Override
-    public AuthResponse login(String email, String password) throws AuthenticationException {
-        User user = userRepository.findByEmail(email);
-        Admin admin = adminRepository.findByEmail(email);
-
-        if (user == null && admin == null) {
-            throw new AuthenticationException("User not found");
+    @Transactional
+    public AuthResponse login(LoginRequest loginRequest) {
+        User user = userRepository.findByEmail(loginRequest.getEmail());
+        if (user == null || !matchesPassword(loginRequest.getPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException();
         }
 
-        if ((user != null && matchesPassword(user.getPassword(), password)) ||
-                (admin != null && matchesPassword(admin.getPassword(), password))) {
-            throw new AuthenticationException("Invalid credentials");
-        }
+        String accessToken = generateAccessToken(user);
+        String rolesAsString = String.join(",", user.getRoles().stream()
+                .map(userRole -> userRole.getRole().toString())
+                .toList());
 
-        String username;
-        Set<Role> roles;
-        Integer entityId;
-        if (user != null) {
-            username = user.getUserName();
-            roles = user.getRoles();
-            entityId = user.getUserID();
-        } else {
-            username = admin.getUserName();
-            roles = admin.getRoles();
-            entityId = admin.getAdminID();
-        }
-
-        String token = generateTokenForRoles(username, roles, entityId);
-        String roleString = getRolesAsString(roles);
-
-        AuthResponse response = new AuthResponse();
-        response.setToken(token);
-        response.setRole(roleString);
-        return response;
+        return new AuthResponse(accessToken, List.of(rolesAsString));
     }
 
-    private boolean matchesPassword(String storedPassword, String enteredPassword) {
-        return !storedPassword.equals(enteredPassword);
+
+
+    private boolean matchesPassword(String rawPassword, String storedHashedPassword) {
+        return passwordEncoder.matches(rawPassword, storedHashedPassword);
     }
 
-    private String generateTokenForRoles(String username, Set<Role> roles, Integer entityId) {
-        List<String> roleNames = roles.stream()
-                .map(role -> role.getRole().toString())
+    private String generateAccessToken(User user) {
+        Long passengerId = user.getPassenger() != null ? user.getPassenger().getPassengerId() : null;
+        List<String> roles = user.getRoles().stream()
+                .map(userRole -> userRole.getRole().toString())
                 .toList();
 
-        AccessTokenImpl accessToken = new AccessTokenImpl(username, entityId, roleNames);
-        return accessTokenEncoder.encode(accessToken);
+        return accessTokenEncoder.encode(
+                new AccessTokenImpl(user.getEmail(), passengerId, roles));
     }
-
-
-    private String getRolesAsString(Set<Role> roles) {
-        return roles.stream()
-                .map(role -> role.getRole().toString())
-                .collect(Collectors.joining(","));
-    }
-
-
 
 
 

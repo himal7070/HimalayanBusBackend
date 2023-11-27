@@ -1,14 +1,21 @@
 package com.himalayanbus.dtos;
 
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
-@AllArgsConstructor
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class AuthResponse {
 
-    private String token;
-    private String role;
+    private String accessToken;
+
+    private List<String> userRoles;
 
 }

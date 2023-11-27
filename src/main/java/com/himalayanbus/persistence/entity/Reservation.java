@@ -1,5 +1,6 @@
 package com.himalayanbus.persistence.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,11 +19,9 @@ public class Reservation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer reservationID;
+    private Long reservationID;
 
     private String status;
-
-    private String type;
 
     private LocalDate date;
 
@@ -42,6 +41,12 @@ public class Reservation {
     private Bus bus;
 
     @ManyToOne
+    @JsonIgnore
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "passenger_id")
+    private Passenger passenger;
+
 
 }

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 
 @Repository
-public interface IReservationRepository extends JpaRepository <Reservation, Integer> {
+public interface IReservationRepository extends JpaRepository <Reservation, Long> {
 
+    Object findByIdAndUserId(long l, long l1);
 }

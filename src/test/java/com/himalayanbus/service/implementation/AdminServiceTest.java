@@ -1,25 +1,30 @@
 package com.himalayanbus.service.implementation;
 
 import com.himalayanbus.exception.AdminException;
-import com.himalayanbus.persistence.entity.Admin;
 import com.himalayanbus.persistence.entity.Role;
+import com.himalayanbus.persistence.entity.User;
 import com.himalayanbus.persistence.entity.UserRole;
-import com.himalayanbus.persistence.repository.IAdminRepository;
 import com.himalayanbus.persistence.repository.IRoleRepository;
-import org.junit.jupiter.api.Assertions;
+import com.himalayanbus.persistence.repository.IUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class AdminServiceTest {
 
     @Mock
-    private IAdminRepository adminRepository;
+    private IUserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @Mock
     private IRoleRepository roleRepository;
@@ -28,67 +33,77 @@ class AdminServiceTest {
     private AdminService adminService;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    void testCreateAdmin() {
-        Admin newAdmin = new Admin();
-        newAdmin.setEmail("test1@example.com");
-        newAdmin.setPassword("password");
-        newAdmin.setUserName("himal");
+    void testCreateAdmin_Success() throws AdminException {
+        // Arrange
+        User admin = new User();
+        admin.setEmail("admin@example.com");
+        admin.setPassword("password");
 
-        Mockito.when(adminRepository.findByEmail(Mockito.anyString())).thenReturn(null);
+        Role mockAdminRole = new Role();
+        mockAdminRole.setRole(UserRole.ADMIN);
 
-        Mockito.when(roleRepository.findByRole(Mockito.any())).thenReturn(null);
+        when(userRepository.findByEmail(any())).thenReturn(null);
+        when(roleRepository.findByRole(UserRole.ADMIN)).thenReturn(null);
+        when(roleRepository.save(any())).thenReturn(mockAdminRole);
+        when(passwordEncoder.encode(any())).thenReturn("hashedPassword");
+        when(userRepository.save(any())).thenReturn(admin);
 
-        Role savedRole = new Role();
-        savedRole.setId(1L);
-        savedRole.setRole(UserRole.ADMIN);
-        Mockito.when(roleRepository.save(Mockito.any())).thenReturn(savedRole);
+        // Act
+        User createdAdmin = adminService.createAdmin(admin);
 
-        Admin savedAdmin = new Admin();
-        savedAdmin.setAdminID(1);
-        savedAdmin.setEmail("test1@example.com");
-        savedAdmin.setPassword("password");
-        savedAdmin.setUserName("himal");
-        Mockito.when(adminRepository.save(Mockito.any())).thenReturn(savedAdmin);
+        // Assert
+        assertNotNull(createdAdmin);
+        assertEquals("hashedPassword", createdAdmin.getPassword());
+        assertEquals(UserRole.ADMIN, createdAdmin.getRoles().iterator().next().getRole());
 
-        try {
-            Admin createdAdmin = adminService.createAdmin(newAdmin);
-            Assertions.assertEquals("test1@example.com", createdAdmin.getEmail());
-            Assertions.assertEquals("password", createdAdmin.getPassword());
-            Assertions.assertEquals("himal", createdAdmin.getUserName());
-        } catch (AdminException e) {
-            Assertions.fail("AdminException should not be thrown");
-        }
+        // Verify interactions
+        verify(userRepository, times(1)).findByEmail(any());
+        verify(roleRepository, times(1)).findByRole(UserRole.ADMIN);
+        verify(roleRepository, times(1)).save(any());
+        verify(passwordEncoder, times(1)).encode(any());
+        verify(userRepository, times(1)).save(any());
+        verifyNoMoreInteractions(userRepository, roleRepository, passwordEncoder);
     }
 
     @Test
-    void testUpdateAdmin() {
-        Admin adminToUpdate = new Admin();
-        adminToUpdate.setAdminID(1);
-        adminToUpdate.setEmail("test1@example.com");
-        adminToUpdate.setPassword("password");
-        adminToUpdate.setUserName("himal");
+    void testCreateAdmin_EmailAlreadyExists() {
+        // Arrange
+        User admin = new User();
+        admin.setEmail("admin@example.com");
+        admin.setPassword("password");
 
-        Mockito.when(adminRepository.findById(Mockito.anyInt())).thenReturn(Optional.of(adminToUpdate));
+        when(userRepository.findByEmail(any())).thenReturn(admin);
 
-        Admin updatedAdmin = new Admin();
-        updatedAdmin.setAdminID(1);
-        updatedAdmin.setEmail("test1@example.com");
-        updatedAdmin.setPassword("newpassword");
-        updatedAdmin.setUserName("himal dark coder");
-        Mockito.when(adminRepository.save(Mockito.any())).thenReturn(updatedAdmin);
+        // Act and Assert
+        assertThrows(AdminException.class, () -> adminService.createAdmin(admin));
 
-        try {
-            Admin resultAdmin = adminService.updateAdmin(updatedAdmin, 1);
-            Assertions.assertEquals("test1@example.com", resultAdmin.getEmail());
-            Assertions.assertEquals("newpassword", resultAdmin.getPassword());
-            Assertions.assertEquals("himal dark coder", resultAdmin.getUserName());
-        } catch (AdminException e) {
-            Assertions.fail("AdminException should not be thrown");
-        }
+        // Verify interactions
+        verify(userRepository, times(1)).findByEmail(any());
+        verifyNoMoreInteractions(userRepository, roleRepository, passwordEncoder);
     }
+
+    @Test
+    void testUpdateAdminPassword_AdminNotFound() {
+        Long adminId = 1L;
+        String newPassword = "newPassword";
+
+        when(userRepository.findById(adminId)).thenReturn(Optional.empty());
+
+        // When/Then
+        assertThrows(AdminException.class, () -> adminService.updateAdmin(new User(), adminId));
+        verify(userRepository, times(1)).findById(adminId);
+        verifyNoMoreInteractions(userRepository, passwordEncoder);
+    }
+
+
+
+
+
+
+
 }

@@ -3,13 +3,14 @@ package com.himalayanbus.controller;
 
 import com.himalayanbus.dtos.AuthResponse;
 import com.himalayanbus.dtos.LoginRequest;
+import com.himalayanbus.exception.InvalidCredentialsException;
 import com.himalayanbus.service.IAuthService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.security.sasl.AuthenticationException;
 
 
 @RestController
@@ -23,8 +24,13 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody LoginRequest loginRequest) throws AuthenticationException {
-        return authService.login(loginRequest.getEmail(), loginRequest.getPassword());
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
+        try {
+            AuthResponse authResponse = authService.login(loginRequest);
+            return new ResponseEntity<>(authResponse, HttpStatus.OK);
+        } catch (InvalidCredentialsException e) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
     }
 
 }

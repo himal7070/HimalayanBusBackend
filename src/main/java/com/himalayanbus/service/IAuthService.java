@@ -1,10 +1,12 @@
 package com.himalayanbus.service;
 
 import com.himalayanbus.dtos.AuthResponse;
-
-import javax.security.sasl.AuthenticationException;
+import com.himalayanbus.dtos.LoginRequest;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface IAuthService {
 
-    AuthResponse login(String email, String password) throws AuthenticationException;
+
+    @Transactional
+    AuthResponse login(LoginRequest loginRequest);
 }

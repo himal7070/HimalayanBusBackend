@@ -1,17 +1,17 @@
 package com.himalayanbus.service;
 
 import com.himalayanbus.exception.AdminException;
-import com.himalayanbus.persistence.entity.Admin;
+import com.himalayanbus.persistence.entity.User;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface IAdminService {
 
 
     @Transactional
-    Admin createAdmin(Admin admin) throws AdminException;
+    User createAdmin(User admin) throws AdminException;
 
     @Transactional
-    Admin updateAdmin(Admin admin, Integer adminID) throws AdminException;
+    User updateAdmin(User admin, Long adminID) throws AdminException;
 
 
 }

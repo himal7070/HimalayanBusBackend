@@ -44,7 +44,7 @@ public class BusController {
 
     @PutMapping("/update/{busId}")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<Bus> updateBus(@PathVariable Integer busId, @RequestBody Bus newBusDetails) {
+    public ResponseEntity<Bus> updateBus(@PathVariable Long busId, @RequestBody Bus newBusDetails) {
         try {
             Bus updatedBus = busService.updateBus(busId, newBusDetails);
             return ResponseEntity.status(HttpStatus.OK).body(updatedBus);
@@ -56,7 +56,7 @@ public class BusController {
 
     @DeleteMapping("/delete/{busId}")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<String> deleteBus(@PathVariable Integer busId) {
+    public ResponseEntity<String> deleteBus(@PathVariable Long busId) {
         try {
             busService.deleteBus(busId);
             return ResponseEntity.status(HttpStatus.OK).body("Bus deleted successfully");
@@ -80,7 +80,7 @@ public class BusController {
 
     @GetMapping("viewBus/{busId}")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<Bus> viewBus(@PathVariable Integer busId) {
+    public ResponseEntity<Bus> viewBus(@PathVariable Long busId) {
         try {
             Bus bus = busService.viewBus(busId);
             return ResponseEntity.status(HttpStatus.OK).body(bus);

@@ -45,20 +45,20 @@ public class RouteController {
         }
     }
 
-    @PutMapping("/update/{routeId}")
+    @PutMapping("/update")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<Route> updateRoute(@PathVariable Integer routeId, @RequestBody Route updatedRoute) {
+    public ResponseEntity<Route> updateRoute(@RequestBody Route updatedRoute) {
         try {
-            Route updated = routeService.updateRoute(routeId, updatedRoute);
-            return new ResponseEntity<>(updated, HttpStatus.OK);
+            Route updated = routeService.updateRoute(updatedRoute);
+            return ResponseEntity.ok(updated);
         } catch (RouteException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().body(null);
         }
     }
 
     @DeleteMapping("/delete/{routeID}")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<Route> deleteRoute(@PathVariable int routeID) {
+    public ResponseEntity<Route> deleteRoute(@PathVariable Long routeID) {
         try {
             Route deletedRoute = routeService.deleteRoute(routeID);
             return new ResponseEntity<>(deletedRoute, HttpStatus.OK);
@@ -70,7 +70,7 @@ public class RouteController {
 
     @GetMapping("/view/{routeId}")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<Route> viewRoute(@PathVariable Integer routeId) {
+    public ResponseEntity<Route> viewRoute(@PathVariable Long routeId) {
         try {
             Route route = routeService.viewRoute(routeId);
             return new ResponseEntity<>(route, HttpStatus.OK);

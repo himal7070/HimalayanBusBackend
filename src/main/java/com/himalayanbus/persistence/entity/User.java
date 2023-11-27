@@ -1,42 +1,28 @@
 package com.himalayanbus.persistence.entity;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
+
+
 @Data
+@Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer userID;
+    private Long userID;
 
-    private String firstName;
-
-    private String lastName;
-
-    private String userName;
-
-    private String phoneNumber;
-
+    @Column(unique = true)
     private String email;
-
     private String password;
-
-
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Reservation> reservationList = new ArrayList<>();
-
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -48,8 +34,12 @@ public class User {
 
 
     @OneToOne
-    private Reservation reservation;
-
+    @JoinTable(
+            name = "user_passenger",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "passenger_id")
+    )
+    private Passenger passenger;
 
 
 

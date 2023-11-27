@@ -14,7 +14,7 @@ public class Feedback {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer feedBackID;
+    private Long feedBackID;
 
     private Integer driverRating;
 

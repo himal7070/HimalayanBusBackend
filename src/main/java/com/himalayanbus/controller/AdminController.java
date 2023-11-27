@@ -2,7 +2,7 @@ package com.himalayanbus.controller;
 
 
 import com.himalayanbus.exception.AdminException;
-import com.himalayanbus.persistence.entity.Admin;
+import com.himalayanbus.persistence.entity.User;
 import com.himalayanbus.service.IAdminService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +19,9 @@ public class AdminController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Object> createAdmin(@RequestBody Admin admin) {
+    public ResponseEntity<Object> createAdmin(@RequestBody User admin) {
         try {
-            Admin createdAdmin = adminService.createAdmin(admin);
+            User createdAdmin = adminService.createAdmin(admin);
             return new ResponseEntity<>(createdAdmin, HttpStatus.CREATED);
         } catch (AdminException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -30,9 +30,9 @@ public class AdminController {
 
 
     @PutMapping("/update/{adminID}")
-    public ResponseEntity<Admin> updateAdmin(@RequestBody Admin admin, @PathVariable Integer adminID) {
+    public ResponseEntity<User> updateAdmin(@RequestBody User admin, @PathVariable Long adminID) {
         try {
-            Admin updatedAdmin = adminService.updateAdmin(admin, adminID);
+            User updatedAdmin = adminService.updateAdmin(admin, adminID);
             return new ResponseEntity<>(updatedAdmin, HttpStatus.OK);
         } catch (AdminException e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

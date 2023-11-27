@@ -11,20 +11,27 @@ public interface IReservationService {
 
 
     @Transactional
-    Reservation addReservation(ReservationDTO dto, String jwtToken) throws ReservationException;
+    Reservation addReservation(ReservationDTO dto) throws ReservationException;
+
 
     @Transactional
-    Reservation viewReservation(Integer rid, String jwtToken) throws ReservationException;
+    Reservation updateReservation(Long reservationId, ReservationDTO dto) throws ReservationException;
 
     @Transactional
-    List<Reservation> getAllReservation(String jwtToken) throws ReservationException;
+    Reservation viewReservation(Long reservationId) throws ReservationException;
 
     @Transactional
-    List<Reservation> viewReservationByUerId(Integer uid, String jwtToken) throws ReservationException;
+    List<Reservation> getAllReservation() throws ReservationException;
+
 
     @Transactional
-    Reservation deleteReservation(Integer rid, String jwtToken) throws ReservationException;
+    List<Reservation> viewReservationsForCurrentUser() throws ReservationException;
 
     @Transactional
-    Reservation updateReservation(Integer rid, ReservationDTO dto, String jwtToken) throws ReservationException;
+    Reservation deleteReservation(Long reservationId) throws ReservationException;
+
+    @Transactional
+    List<Reservation> viewReservationByUserId(Long uid) throws ReservationException;
+
+
 }

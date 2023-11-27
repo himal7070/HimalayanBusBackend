@@ -17,8 +17,11 @@ import java.util.Optional;
 public class BusService implements IBusService {
 
     private final IBusRepository busRepository;
-
     private final IRouteRepository routeRepository;
+
+    private static final String BUS_ID_NOT_FOUND_MESSAGE = "Bus with id ";
+    private static final String NOT_EXIST_MESSAGE = " does not exist";
+
 
     public BusService(IBusRepository busRepository, IRouteRepository routeRepository) {
         this.busRepository = busRepository;
@@ -46,7 +49,7 @@ public class BusService implements IBusService {
 
     @Override
     @Transactional
-    public Bus updateBus(Integer busId, Bus newBusDetails) throws BusException {
+    public Bus updateBus(Long busId, Bus newBusDetails) throws BusException {
         Optional<Bus> optionalBus = busRepository.findById(busId);
 
         if (optionalBus.isPresent()) {
@@ -55,6 +58,8 @@ public class BusService implements IBusService {
             if (!Objects.equals(existingBus.getAvailableSeats(), existingBus.getTotalSeats())) {
                 throw new BusException("Cannot update a bus that already has scheduled seats");
             }
+
+
 
             Route route = routeRepository.findByRouteFromAndRouteTo(existingBus.getRouteFrom(), existingBus.getRouteTo());
 
@@ -75,7 +80,7 @@ public class BusService implements IBusService {
             return updatedBus;
         }
 
-        throw new BusException("Bus with id " + busId + " does not exist");
+        throw new BusException(BUS_ID_NOT_FOUND_MESSAGE + busId + NOT_EXIST_MESSAGE);
     }
 
 
@@ -111,7 +116,7 @@ public class BusService implements IBusService {
 
     @Override
     @Transactional
-    public Bus deleteBus(Integer busId) throws BusException {
+    public Bus deleteBus(Long busId) throws BusException {
         Optional<Bus> optionalBus = busRepository.findById(busId);
 
         if (optionalBus.isPresent()) {
@@ -125,20 +130,20 @@ public class BusService implements IBusService {
             return busToDelete;
         }
 
-        throw new BusException("Bus with id " + busId + " does not exist");
+        throw new BusException(BUS_ID_NOT_FOUND_MESSAGE + busId + NOT_EXIST_MESSAGE);
     }
 
 
     @Override
     @Transactional
-    public Bus viewBus(Integer busId) throws BusException {
+    public Bus viewBus(Long busId) throws BusException {
         Optional<Bus> optionalBus = busRepository.findById(busId);
 
         if (optionalBus.isPresent()) {
             return optionalBus.get();
         }
 
-        throw new BusException("Bus with id " + busId + " does not exist");
+        throw new BusException(BUS_ID_NOT_FOUND_MESSAGE + busId + NOT_EXIST_MESSAGE);
     }
 
     @Override
