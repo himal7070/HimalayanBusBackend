@@ -84,7 +84,7 @@ public class BusService implements IBusService {
     }
 
 
-    private void updateBusDetails(Bus existingBus, Bus newBusDetails) {
+    void updateBusDetails(Bus existingBus, Bus newBusDetails) {
         if (newBusDetails.getArrivalTime() != null) {
             existingBus.setArrivalTime(newBusDetails.getArrivalTime());
         }

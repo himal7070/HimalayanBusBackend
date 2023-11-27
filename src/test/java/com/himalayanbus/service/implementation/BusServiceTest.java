@@ -309,7 +309,48 @@ class BusServiceTest {
 
 
 
+    @Test
+    void testUpdateBusDetails_WhenArrivalTimeNotNull_UpdatesArrivalTime() {
+        Bus existingBus = new Bus();
+        Bus newBusDetails = new Bus();
+        newBusDetails.setArrivalTime(LocalTime.now());
 
+        busService.updateBusDetails(existingBus, newBusDetails);
+
+        assertEquals(newBusDetails.getArrivalTime(), existingBus.getArrivalTime());
+        assertNull(existingBus.getBusName());
+
+    }
+
+
+    @Test
+    void testUpdateBusDetails_WhenAvailableSeatsNotNull_UpdatesAvailableSeats() {
+        Bus existingBus = new Bus();
+        Bus newBusDetails = new Bus();
+        newBusDetails.setAvailableSeats(50);
+
+        busService.updateBusDetails(existingBus, newBusDetails);
+
+        assertEquals(newBusDetails.getAvailableSeats(), existingBus.getAvailableSeats());
+        assertNull(existingBus.getArrivalTime());
+    }
+
+
+
+
+    @Test
+    void testUpdateBus_WhenScheduledSeatsExist_ThrowsException() {
+        Bus existingBus = new Bus();
+        existingBus.setAvailableSeats(30); // Some seats have been scheduled
+        existingBus.setTotalSeats(40);
+
+        Bus newBusDetails = new Bus();
+        newBusDetails.setAvailableSeats(35); // New seat configuration
+
+        when(busRepository.findById(anyLong())).thenReturn(Optional.of(existingBus));
+
+        assertThrows(BusException.class, () -> busService.updateBus(1L, newBusDetails));
+    }
 
 
 
