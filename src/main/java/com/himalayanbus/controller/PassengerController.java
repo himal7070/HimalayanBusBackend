@@ -3,6 +3,7 @@ package com.himalayanbus.controller;
 import com.himalayanbus.exception.UserException;
 import com.himalayanbus.persistence.entity.Passenger;
 import com.himalayanbus.persistence.entity.User;
+import com.himalayanbus.persistence.repository.IPassengerRepository;
 import com.himalayanbus.service.IPassengerService;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.http.HttpStatus;
@@ -18,54 +19,57 @@ import java.util.List;
 public class PassengerController {
 
     private final IPassengerService passengerService;
+    private final IPassengerRepository passengerRepository;
 
 
-    public PassengerController(IPassengerService passengerService) {
+    public PassengerController(IPassengerService passengerService, IPassengerRepository passengerRepository) {
         this.passengerService = passengerService;
+        this.passengerRepository = passengerRepository;
     }
 
     @PostMapping("/add")
-    public ResponseEntity<User> addPassenger(@RequestBody User user) {
-        try {
-            User newUser = passengerService.addPassenger(user);
-            return new ResponseEntity<>(newUser, HttpStatus.CREATED);
-        } catch (UserException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<User> addPassenger(@RequestBody User user) throws UserException {
+        User newUser = passengerService.addPassenger(user);
+        return new ResponseEntity<>(newUser, HttpStatus.CREATED);
     }
 
 
     @PutMapping("/update/{userID}")
     @RolesAllowed({"USER", "ADMIN"})
-    public ResponseEntity<User> updatePassenger(@PathVariable Long userID, @RequestBody User userUpdate, @RequestBody Passenger passengerUpdate) {
-        try {
-            User updatedUser = passengerService.updatePassenger(userID, userUpdate, passengerUpdate);
-            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
-        } catch (UserException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<User> updatePassenger(@PathVariable Long userID, @RequestBody User userUpdate, @RequestBody Passenger passengerUpdate) throws UserException {
+        User updatedUser = passengerService.updatePassenger(userID, userUpdate, passengerUpdate);
+        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
     }
 
 
     @DeleteMapping("/delete/{userID}")
     @RolesAllowed({"USER", "ADMIN"})
-    public ResponseEntity<User> deletePassenger(@PathVariable Long userID) {
-        try {
-            User deletedUser = passengerService.deletePassenger(userID);
-            return new ResponseEntity<>(deletedUser, HttpStatus.OK);
-        } catch (UserException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<User> deletePassenger(@PathVariable Long userID) throws UserException {
+        User deletedUser = passengerService.deletePassenger(userID);
+        return new ResponseEntity<>(deletedUser, HttpStatus.OK);
     }
 
     @GetMapping("/viewAll")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<List<Passenger>> viewAllPassengers() {
+    public List<Object[]> viewAllPassengersWithUserDetails() throws UserException {
+        List<Object[]> passengerList = passengerRepository.findAllPassengersWithUserDetails();
+
+        if (passengerList.isEmpty()) {
+            throw new UserException("No passengers found!");
+        }
+
+        return passengerList;
+    }
+
+
+    @GetMapping("/count")
+    @RolesAllowed("ADMIN")
+    public ResponseEntity<String> getTotalPassengerCount() {
         try {
-            List<Passenger> passengers = passengerService.viewAllPassengers();
-            return new ResponseEntity<>(passengers, HttpStatus.OK);
+            long count = passengerService.getTotalPassengerCount();
+            return ResponseEntity.ok("Total : " + count);
         } catch (UserException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 

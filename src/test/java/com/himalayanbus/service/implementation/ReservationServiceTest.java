@@ -272,26 +272,6 @@ class ReservationServiceTest {
     }
 
 
-    @Test
-    void testValidateReservationDeletion_ReservationExpired() throws Exception {
-        Method method = ReservationService.class.getDeclaredMethod("validateReservationDeletion", Reservation.class);
-        method.setAccessible(true);
-
-        Reservation reservation = new Reservation();
-        reservation.setJourneyDate(LocalDate.now().minusDays(1));
-
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
-
-        assertThrows(ReservationException.class, () -> {
-            try {
-                method.invoke(reservationService, reservation);
-            } catch (InvocationTargetException e) {
-                throw e.getCause();
-            }
-        });
-    }
-
-
 
 
     @Test
@@ -410,10 +390,16 @@ class ReservationServiceTest {
 
     @Test
     void testValidateReservationDeletion_ReservationNotExpired() throws Exception {
+        long reservationId = 1L;
         Reservation reservation = new Reservation();
+        reservation.setReservationID(reservationId);
         reservation.setJourneyDate(LocalDate.now().plusDays(1));
 
-        Method method = ReservationService.class.getDeclaredMethod("validateReservationDeletion", Reservation.class);
+        // Mock behavior
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+
+        // Invoke the method under test
+        Method method = ReservationService.class.getDeclaredMethod("validateReservationDeletion", Long.class, LocalDate.class);
         method.setAccessible(true);
 
         ReservationService reservationService = new ReservationService(
@@ -425,11 +411,52 @@ class ReservationServiceTest {
         );
 
         try {
-            method.invoke(reservationService, reservation);
+
+            method.invoke(reservationService, reservationId, LocalDate.now());
         } catch (InvocationTargetException e) {
             fail("Unexpected exception: " + e.getCause().getMessage());
         }
     }
+
+
+
+
+
+    @Test
+    void testValidateReservationDeletion_ReservationExpired() throws Exception {
+        Method method = ReservationService.class.getDeclaredMethod("validateReservationDeletion", Long.class, LocalDate.class);
+        method.setAccessible(true);
+
+        Reservation reservation = new Reservation();
+        reservation.setJourneyDate(LocalDate.now().minusDays(1));
+
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+
+        ReservationService reservationService = new ReservationService(
+                reservationRepository,
+                busRepository,
+                userRepository,
+                routeRepository,
+                accessToken
+        );
+
+        assertThrows(ReservationException.class, () -> {
+            try {
+                method.invoke(reservationService, reservation.getReservationID(), LocalDate.now());
+            } catch (InvocationTargetException e) {
+                throw e.getCause();
+            }
+        });
+    }
+
+
+
+
+
+
+
+
+
 
 
 
@@ -448,30 +475,116 @@ class ReservationServiceTest {
 
 
 
+    @Test
+    void testGetUserFromToken_InvalidToken_ThrowsException() {
+        when(accessToken.getPassengerId()).thenReturn(null);
+
+        assertThrows(ReservationException.class, () -> reservationService.getUserFromToken());
+
+        verify(userRepository, never()).findById(anyLong());
+    }
 
 
 
 
 
+    @Test
+    void testCreateReservation_PassengerDetailsNotFound_ThrowsException() {
+        ReservationDTO reservationDTO = new ReservationDTO();
+        reservationDTO.setDepartureLocation("Location1");
+        reservationDTO.setDestination("Location2");
+        reservationDTO.setJourneyDate(LocalDate.now());
+        reservationDTO.setBookedSeat(2);
+
+        User mockUser = new User();
+        mockUser.setUserID(1L);
+        mockUser.setEmail("darkCoder");
+
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(mockUser));
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
+
+        assertThrows(ReservationException.class, () -> reservationService.addReservation(reservationDTO));
+
+        verify(reservationRepository, never()).save(any());
+    }
 
 
 
+    @Test
+    void testAddReservation_InsufficientAvailableSeats_ThrowsException() {
+        ReservationDTO reservationDTO = new ReservationDTO();
+
+        User mockUser = new User();
+        mockUser.setUserID(1L);
+        mockUser.setEmail("darkCoder");
+
+        Route mockRoute = new Route();
+        mockRoute.setRouteFrom("Location1");
+        mockRoute.setRouteTo("Location2");
+
+        Bus mockBus = new Bus();
+        mockBus.setAvailableSeats(1);
+
+
+        assertThrows(ReservationException.class, () -> reservationService.addReservation(reservationDTO));
+
+        verify(busRepository, never()).save(any());
+    }
+
+
+    @Test
+    void testUpdateReservation_InsufficientAvailableSeats_ThrowsException() {
+        ReservationDTO reservationDTO = new ReservationDTO();
+        // Set up reservationDTO...
+
+        User mockUser = new User();
+        mockUser.setUserID(1L);
+        mockUser.setEmail("darkCoder");
+
+        Route mockRoute = new Route();
+        mockRoute.setRouteFrom("Location1");
+        mockRoute.setRouteTo("Location2");
+
+        Bus mockBus = new Bus();
+        mockBus.setAvailableSeats(1);
+
+
+        assertThrows(ReservationException.class, () -> reservationService.updateReservation(1L, reservationDTO));
+
+        verify(busRepository, never()).save(any());
+    }
 
 
 
+    @Test
+    void testDeleteReservation_ReservationNotFoundForUser_ThrowsException() {
+        User mockUser = getMockUser();
 
+        // Mock repository method calls
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(mockUser));
+        when(reservationRepository.findById(anyLong())).thenReturn(Optional.empty());
 
+        // Perform the test
+        assertThrows(ReservationException.class, () -> reservationService.deleteReservation(1L));
 
+        // Verify that the delete method was never called on the repository
+        verify(reservationRepository, never()).delete(any());
+    }
 
+    private static User getMockUser() {
+        User mockUser = new User();
+        mockUser.setUserID(1L);
 
-
-
-
-
-
-
-
-
+        Passenger passenger = new Passenger();
+        Reservation reservation1 = new Reservation();
+        reservation1.setReservationID(1L);
+        Reservation reservation2 = new Reservation();
+        reservation2.setReservationID(2L);
+        List<Reservation> passengerReservations = List.of(reservation1, reservation2);
+        passenger.setReservationList(passengerReservations);
+        mockUser.setPassenger(passenger);
+        return mockUser;
+    }
 
 
 }

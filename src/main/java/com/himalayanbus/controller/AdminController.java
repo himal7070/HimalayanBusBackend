@@ -19,25 +19,16 @@ public class AdminController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Object> createAdmin(@RequestBody User admin) {
-        try {
-            User createdAdmin = adminService.createAdmin(admin);
-            return new ResponseEntity<>(createdAdmin, HttpStatus.CREATED);
-        } catch (AdminException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<User> createAdmin(@RequestBody User admin) throws AdminException {
+        User createdAdmin = adminService.createAdmin(admin);
+        return new ResponseEntity<>(createdAdmin, HttpStatus.CREATED);
     }
 
 
     @PutMapping("/update/{adminID}")
-    public ResponseEntity<User> updateAdmin(@RequestBody User admin, @PathVariable Long adminID) {
-        try {
-            User updatedAdmin = adminService.updateAdmin(admin, adminID);
-            return new ResponseEntity<>(updatedAdmin, HttpStatus.OK);
-        } catch (AdminException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-
+    public ResponseEntity<User> updateAdmin(@RequestBody User admin, @PathVariable Long adminID) throws AdminException {
+        User updatedAdmin = adminService.updateAdmin(admin, adminID);
+        return new ResponseEntity<>(updatedAdmin, HttpStatus.OK);
     }
 
 

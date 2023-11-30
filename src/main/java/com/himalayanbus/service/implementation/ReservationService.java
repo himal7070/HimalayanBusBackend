@@ -153,18 +153,18 @@ public class ReservationService implements IReservationService {
     @Transactional
     public Reservation deleteReservation(Long rid) throws ReservationException {
         User user = getUserFromToken();
-
         Reservation reservation = getReservationForUser(user, rid);
 
+        LocalDate currentDate = LocalDate.now();
 
-        validateReservationDeletion(reservation);
+        validateReservationDeletion(rid, currentDate);
 
         updateBusAvailability(reservation.getBus(), -reservation.getBookedSeat());
-
         reservationRepository.delete(reservation);
 
         return reservation;
     }
+
 
 
 
@@ -269,10 +269,16 @@ public class ReservationService implements IReservationService {
         reservation.setBookedSeat(dto.getBookedSeat());
     }
 
-    private void validateReservationDeletion(Reservation reservation) throws ReservationException {
-        if (reservation.getJourneyDate().isBefore(LocalDate.now())) {
-            throw new ReservationException("Reservation has already expired and cannot be deleted");
+
+    public void validateReservationDeletion(Long reservationId, LocalDate currentDate) throws ReservationException {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ReservationException("Reservation not found"));
+
+        if (reservation.getJourneyDate() != null && reservation.getJourneyDate().isBefore(currentDate)) {
+            throw new ReservationException("Cannot delete past reservations");
         }
+
+
     }
 
 

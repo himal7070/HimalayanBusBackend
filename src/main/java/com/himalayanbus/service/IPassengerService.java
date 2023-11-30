@@ -5,8 +5,6 @@ import com.himalayanbus.persistence.entity.Passenger;
 import com.himalayanbus.persistence.entity.User;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 public interface IPassengerService {
 
 
@@ -20,8 +18,9 @@ public interface IPassengerService {
     User deletePassenger(Long userID) throws UserException;
 
     @Transactional(readOnly = true)
-    List<Passenger> viewAllPassengers() throws UserException;
+    void viewAllPassengersWithUserDetails() throws UserException;
 
 
-
+    @Transactional(readOnly = true)
+    long getTotalPassengerCount() throws UserException;
 }

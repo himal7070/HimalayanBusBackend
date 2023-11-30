@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -136,25 +137,6 @@ class PassengerServiceTest {
         verify(userRepository, times(1)).delete(user);
     }
 
-    @Test
-    void testViewAllPassengers_PassengersExist() throws UserException {
-        // Arrange
-        Passenger passenger1 = new Passenger();
-        Passenger passenger2 = new Passenger();
-        when(passengerRepository.findAll()).thenReturn(List.of(passenger1, passenger2));
-
-        // Act
-        List<Passenger> passengers = passengerService.viewAllPassengers();
-
-        // Assert
-        assertNotNull(passengers);
-        assertEquals(2, passengers.size());
-
-        // Verify
-        verify(passengerRepository, times(1)).findAll();
-    }
-
-
 
 
 
@@ -198,9 +180,7 @@ class PassengerServiceTest {
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         // Act and Assert
-        UserException exception = assertThrows(UserException.class, () -> {
-            passengerService.updatePassenger(1L, null, null);
-        });
+        UserException exception = assertThrows(UserException.class, () -> passengerService.updatePassenger(1L, null, null));
 
         assertEquals("Invalid user ID!", exception.getMessage());
     }
@@ -225,14 +205,68 @@ class PassengerServiceTest {
     @Test
     void testViewAllPassengers_NoPassengersExist_ThrowUserException() {
         // Arrange
-        when(passengerRepository.findAll()).thenReturn(List.of());
+        when(passengerRepository.findAllPassengersWithUserDetails()).thenReturn(List.of());
 
         // Act & Assert
-        assertThrows(UserException.class, () -> passengerService.viewAllPassengers());
-        verify(passengerRepository, times(1)).findAll();
+        assertThrows(UserException.class, () -> passengerService.viewAllPassengersWithUserDetails());
+        verify(passengerRepository, times(1)).findAllPassengersWithUserDetails();
     }
 
 
+
+
+    @Test
+    void testViewAllPassengers_PassengersExist() {
+        // Arrange
+        when(passengerRepository.findAllPassengersWithUserDetails()).thenReturn(new ArrayList<>());
+
+        // Act & Assert
+        assertThrows(UserException.class, () -> passengerService.viewAllPassengersWithUserDetails());
+
+        // Verify
+        verify(passengerRepository, times(1)).findAllPassengersWithUserDetails();
+    }
+
+
+
+    @Test
+    void testGetTotalPassengerCount_NoPassengersAvailable_ThrowUserException() {
+        // Arrange
+        when(passengerRepository.count()).thenReturn(0L);
+
+        // Act & Assert
+        assertThrows(UserException.class, () -> passengerService.getTotalPassengerCount());
+    }
+
+
+
+    @Test
+    void testAddPassenger_WhenUserRoleDoesNotExist_CreatesNewUserRole() throws UserException {
+        // Arrange
+        User user = new User();
+        user.setEmail("test@example.com");
+        Passenger passenger = new Passenger();
+        user.setPassenger(passenger);
+
+        when(userRepository.existsByEmail(user.getEmail())).thenReturn(false);
+        when(roleRepository.findByRole(any())).thenReturn(null);
+        when(roleRepository.save(any())).thenReturn(new Role());
+        when(passwordEncoder.encode(any())).thenReturn("hashedPassword");
+        when(userRepository.save(user)).thenReturn(user).thenReturn(user);
+        when(passengerRepository.save(any())).thenReturn(passenger);
+
+        // Act
+        User resultUser = passengerService.addPassenger(user);
+
+        // Assert
+        assertNotNull(resultUser);
+        assertEquals("hashedPassword", resultUser.getPassword());
+        assertEquals(1, resultUser.getRoles().size());
+
+        // Verify
+        verify(userRepository, times(2)).save(user);
+        verify(passengerRepository, times(1)).save(any());
+    }
 
 
 

@@ -79,17 +79,32 @@ public class PassengerService implements IPassengerService {
         return user;
     }
 
+
     @Override
     @Transactional(readOnly = true)
-    public List<Passenger> viewAllPassengers() throws UserException {
-        List<Passenger> passengerList = passengerRepository.findAll();
+    public void viewAllPassengersWithUserDetails() throws UserException {
+        List<Object[]> passengerList = passengerRepository.findAllPassengersWithUserDetails();
 
         if (passengerList.isEmpty()) {
             throw new UserException("No passengers found!");
         }
 
-        return passengerList;
     }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getTotalPassengerCount() throws UserException {
+        long count = passengerRepository.count();
+
+        if (count == 0) {
+            throw new UserException("No passengers available at the moment");
+        }
+
+        return count;
+    }
+
+
 
     //--------------------------- Sub-divided methods [dark coder - aryal]----------------------------------
 
@@ -126,11 +141,15 @@ public class PassengerService implements IPassengerService {
             passengerDetails.setLastName(passenger.getLastName());
             passengerDetails.setPhoneNumber(passenger.getPhoneNumber());
 
+            passengerDetails.setUser(savedUser);
+
             passengerDetails = passengerRepository.save(passengerDetails);
+
             savedUser.setPassenger(passengerDetails);
             userRepository.save(savedUser);
         });
     }
+
 
     private void updatePasswordIfNotEmpty(User existingUser, String updatedPassword) {
         if (!updatedPassword.isEmpty()) {

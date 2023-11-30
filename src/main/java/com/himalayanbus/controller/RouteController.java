@@ -24,59 +24,40 @@ public class RouteController {
 
     @PostMapping("/add")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<Route> addRoute(@RequestBody Route newRoute) {
-        try {
-            Route addedRoute = routeService.addRoute(newRoute);
-            return new ResponseEntity<>(addedRoute, HttpStatus.CREATED);
-        } catch (RouteException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<Route> addRoute(@RequestBody Route newRoute) throws RouteException {
+        Route addedRoute = routeService.addRoute(newRoute);
+        return new ResponseEntity<>(addedRoute, HttpStatus.CREATED);
     }
 
 
     @GetMapping("/viewAll")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<List<Route>> viewAllRoutes() {
-        try {
-            List<Route> routeList = routeService.viewAllRoutes();
-            return new ResponseEntity<>(routeList, HttpStatus.OK);
-        } catch (RouteException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<List<Route>> viewAllRoutes() throws RouteException {
+        List<Route> routeList = routeService.viewAllRoutes();
+        return new ResponseEntity<>(routeList, HttpStatus.OK);
     }
+
 
     @PutMapping("/update")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<Route> updateRoute(@RequestBody Route updatedRoute) {
-        try {
-            Route updated = routeService.updateRoute(updatedRoute);
-            return ResponseEntity.ok(updated);
-        } catch (RouteException e) {
-            return ResponseEntity.badRequest().body(null);
-        }
+    public ResponseEntity<Route> updateRoute(@RequestBody Route updatedRoute) throws RouteException {
+        Route updated = routeService.updateRoute(updatedRoute);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/delete/{routeID}")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<Route> deleteRoute(@PathVariable Long routeID) {
-        try {
-            Route deletedRoute = routeService.deleteRoute(routeID);
-            return new ResponseEntity<>(deletedRoute, HttpStatus.OK);
-        } catch (RouteException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+    public ResponseEntity<Route> deleteRoute(@PathVariable Long routeID) throws RouteException {
+        Route deletedRoute = routeService.deleteRoute(routeID);
+        return new ResponseEntity<>(deletedRoute, HttpStatus.OK);
     }
 
 
     @GetMapping("/view/{routeId}")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<Route> viewRoute(@PathVariable Long routeId) {
-        try {
-            Route route = routeService.viewRoute(routeId);
-            return new ResponseEntity<>(route, HttpStatus.OK);
-        } catch (RouteException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    public ResponseEntity<Route> viewRoute(@PathVariable Long routeId) throws RouteException {
+        Route route = routeService.viewRoute(routeId);
+        return new ResponseEntity<>(route, HttpStatus.OK);
     }
 
 

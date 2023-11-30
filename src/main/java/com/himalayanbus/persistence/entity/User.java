@@ -1,5 +1,6 @@
 package com.himalayanbus.persistence.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -33,13 +34,11 @@ public class User {
     private Set<Role> roles = new HashSet<>();
 
 
-    @OneToOne
-    @JoinTable(
-            name = "user_passenger",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "passenger_id")
-    )
+    @OneToOne(mappedBy = "user")
+    @JsonBackReference
     private Passenger passenger;
+
+
 
 
 

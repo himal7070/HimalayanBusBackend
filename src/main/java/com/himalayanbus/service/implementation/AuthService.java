@@ -24,14 +24,12 @@ public class AuthService implements IAuthService {
     private final PasswordEncoder passwordEncoder;
 
 
-
-
-
     public AuthService(IUserRepository userRepository, AccessTokenEncoder accessTokenEncoder, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.accessTokenEncoder = accessTokenEncoder;
         this.passwordEncoder = passwordEncoder;
     }
+
 
     @Override
     @Transactional
@@ -64,6 +62,10 @@ public class AuthService implements IAuthService {
         return accessTokenEncoder.encode(
                 new AccessTokenImpl(user.getEmail(), passengerId, roles));
     }
+
+
+
+
 
 
 
