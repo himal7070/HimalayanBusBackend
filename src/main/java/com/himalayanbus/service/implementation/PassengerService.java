@@ -25,6 +25,7 @@ public class PassengerService implements IPassengerService {
     private final IRoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
+
     public PassengerService(IUserRepository userRepository, IPassengerRepository passengerRepository,
                             IRoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
@@ -32,6 +33,7 @@ public class PassengerService implements IPassengerService {
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
+
 
     @Override
     @Transactional(rollbackFor = UserException.class)
