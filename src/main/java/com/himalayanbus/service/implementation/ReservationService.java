@@ -166,10 +166,6 @@ public class ReservationService implements IReservationService {
     }
 
 
-
-
-
-
     User getUserFromToken() throws ReservationException {
         Long userIdFromToken = requestAccessToken.getPassengerId();
         return userRepository.findById(userIdFromToken)
@@ -281,6 +277,20 @@ public class ReservationService implements IReservationService {
 
     }
 
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countActiveReservationsForToday() throws ReservationException {
+        LocalDate currentDate = LocalDate.now();
+
+        long activeReservationsCount = reservationRepository.countReservationsByDate(currentDate);
+
+        if (activeReservationsCount == 0) {
+            throw new ReservationException("No active reservations for today");
+        }
+
+        return activeReservationsCount;
+    }
 
 
 }

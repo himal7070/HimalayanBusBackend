@@ -587,4 +587,33 @@ class ReservationServiceTest {
     }
 
 
+    @Test
+    void testCountActiveReservationsForToday_ActiveReservationsExist() {
+        LocalDate currentDate = LocalDate.now();
+        long expectedCount = 5;
+
+        when(reservationRepository.countReservationsByDate(currentDate)).thenReturn(expectedCount);
+
+        try {
+            long count = reservationService.countActiveReservationsForToday();
+            assertEquals(expectedCount, count);
+            verify(reservationRepository, times(1)).countReservationsByDate(currentDate);
+        } catch (ReservationException e) {
+            fail("ReservationException should not be thrown");
+        }
+    }
+
+    @Test
+    void testCountActiveReservationsForToday_NoActiveReservations() {
+        LocalDate currentDate = LocalDate.now();
+
+        when(reservationRepository.countReservationsByDate(currentDate)).thenReturn(0L);
+
+        assertThrows(ReservationException.class, () -> reservationService.countActiveReservationsForToday());
+        verify(reservationRepository, times(1)).countReservationsByDate(currentDate);
+    }
+
+
+
+
 }

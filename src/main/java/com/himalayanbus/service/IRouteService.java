@@ -23,4 +23,8 @@ public interface IRouteService {
 
     @Transactional
     Route viewRoute(Long routeId) throws RouteException;
+
+    @Transactional(readOnly = true)
+    long getTotalRouteCount() throws RouteException;
+
 }

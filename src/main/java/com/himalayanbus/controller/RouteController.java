@@ -45,6 +45,7 @@ public class RouteController {
         return ResponseEntity.ok(updated);
     }
 
+
     @DeleteMapping("/delete/{routeID}")
     @RolesAllowed("ADMIN")
     public ResponseEntity<Route> deleteRoute(@PathVariable Long routeID) throws RouteException {
@@ -58,6 +59,18 @@ public class RouteController {
     public ResponseEntity<Route> viewRoute(@PathVariable Long routeId) throws RouteException {
         Route route = routeService.viewRoute(routeId);
         return new ResponseEntity<>(route, HttpStatus.OK);
+    }
+
+    @GetMapping("/count")
+    @RolesAllowed("ADMIN")
+    public ResponseEntity<String> getTotalRouteCount() {
+        try {
+            long count = routeService.getTotalRouteCount();
+            return ResponseEntity.ok("Total : " + count);
+        } catch (RouteException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
     }
 
 

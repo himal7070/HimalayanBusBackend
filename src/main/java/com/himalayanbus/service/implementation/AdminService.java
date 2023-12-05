@@ -52,6 +52,20 @@ public class AdminService implements IAdminService {
         return userRepository.save(existingAdmin);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long countAdmins() throws AdminException {
+        long adminCount = userRepository.countAdmins();
+
+        if (adminCount == 0) {
+            throw new AdminException("No admin users found");
+        }
+
+        return adminCount;
+    }
+
+
+
     private void validateAdminEmail(String email) throws AdminException {
         User existingAdmin = userRepository.findByEmail(email);
         if (existingAdmin != null) {
@@ -78,6 +92,10 @@ public class AdminService implements IAdminService {
             existingAdmin.setPassword(hashPassword(newPassword));
         }
     }
+
+
+
+
 
 }
 

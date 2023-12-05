@@ -2,9 +2,8 @@ package com.himalayanbus.persistence.repository;
 
 import com.himalayanbus.persistence.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
 
 @Repository
 public interface IUserRepository extends JpaRepository<User, Long> {
@@ -13,9 +12,7 @@ public interface IUserRepository extends JpaRepository<User, Long> {
 
     User findByEmail(String email);
 
-
-    default Optional<User> findByUserID() {
-        return Optional.empty();
-    }
+    @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r.role = 'ADMIN'")
+    long countAdmins();
 
 }

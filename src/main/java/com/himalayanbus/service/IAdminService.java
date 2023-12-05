@@ -14,4 +14,6 @@ public interface IAdminService {
     User updateAdmin(User admin, Long adminID) throws AdminException;
 
 
+    @Transactional(readOnly = true)
+    long countAdmins() throws AdminException;
 }

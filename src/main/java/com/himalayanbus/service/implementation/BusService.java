@@ -9,6 +9,8 @@ import com.himalayanbus.service.IBusService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -169,6 +171,62 @@ public class BusService implements IBusService {
 
         return busList;
     }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countAllBuses() throws BusException {
+        long busCount = busRepository.count();
+
+        if (busCount == 0) {
+            throw new BusException("No buses available at the moment");
+        }
+
+        return busCount;
+    }
+
+
+
+    @Override
+    @Transactional
+    public List<Bus> searchBusByRoute(String routeFrom, String routeTo, LocalDate journeyDate) throws BusException {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+
+        List<Bus> busList = busRepository.findByRoute_RouteFromAndRoute_RouteTo(routeFrom, routeTo);
+
+        if (busList.isEmpty()) {
+            throw new BusException("No buses found for the given route");
+        }
+
+        if (journeyDate != null) {
+            busList = busList.stream()
+                    .filter(bus -> bus.getJourneyDate().equals(journeyDate))
+                    .toList();
+
+            if (busList.isEmpty()) {
+                throw new BusException("No buses found for the provided journey date");
+            }
+        }
+
+
+        List<Bus> futureBuses = busList.stream()
+                .filter(bus -> bus.getDepartureTime().atDate(bus.getJourneyDate()).isAfter(currentDateTime))
+                .toList();
+
+        if (futureBuses.isEmpty()) {
+            throw new BusException("No buses available for the given route at the moment");
+        }
+
+        return futureBuses;
+    }
+
+
+
+
+
+
+
+
 
 
 }

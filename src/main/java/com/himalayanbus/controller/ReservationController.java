@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/himalayanbus/reservation")
@@ -72,6 +73,30 @@ public class ReservationController {
         Reservation reservation = reservationService.deleteReservation(reservationId);
         return ResponseEntity.status(HttpStatus.OK).body(reservation);
     }
+
+//    @GetMapping("/count")
+//    @RolesAllowed("ADMIN")
+//    public ResponseEntity<String> countActiveReservationsForToday() {
+//        try {
+//            long count = reservationService.countActiveReservationsForToday();
+//            return ResponseEntity.ok("Today : " + count);
+//        } catch (ReservationException e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+//        }
+//
+//    }
+
+    @GetMapping("/count")
+    @RolesAllowed("ADMIN")
+    public ResponseEntity<Object> countActiveReservationsForToday() {
+        try {
+            long count = reservationService.countActiveReservationsForToday();
+            return ResponseEntity.ok(Map.of("message", "Active reservations for today", "count", count));
+        } catch (ReservationException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
 
 
 }

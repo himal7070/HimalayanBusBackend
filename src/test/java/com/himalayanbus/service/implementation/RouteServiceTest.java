@@ -195,6 +195,38 @@ class RouteServiceTest {
         assertThrows(RouteException.class, () -> routeService.viewRoute(1L));
         verify(routeRepository, times(1)).findById(1L);
     }
+
+
+    @Test
+    void testGetTotalRouteCount() {
+        when(routeRepository.count()).thenReturn(5L);
+
+        try {
+            long count = routeService.getTotalRouteCount();
+            assertEquals(5L, count);
+            verify(routeRepository, times(1)).count();
+        } catch (RouteException e) {
+            fail("RouteException should not be thrown");
+        }
+    }
+
+    @Test
+    void testGetTotalRouteCount_NoRoutesAvailable() {
+        when(routeRepository.count()).thenReturn(0L);
+
+        assertThrows(RouteException.class, () -> routeService.getTotalRouteCount());
+        verify(routeRepository, times(1)).count();
+    }
+
+
+
+
+
+
+
+
+
+
 }
 
 

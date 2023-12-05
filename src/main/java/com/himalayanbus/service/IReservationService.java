@@ -33,5 +33,7 @@ public interface IReservationService {
     @Transactional
     List<Reservation> viewReservationByUserId(Long uid) throws ReservationException;
 
+    @Transactional(readOnly = true)
+    long countActiveReservationsForToday() throws ReservationException;
 
 }

@@ -61,8 +61,6 @@ public class RouteService implements IRouteService {
 
 
 
-
-
     private Route getExistingRoute(Long routeId) throws RouteException {
         return routeRepository.findById(routeId)
                 .orElseThrow(() -> new RouteException("No route exists with ID: " + routeId));
@@ -101,6 +99,21 @@ public class RouteService implements IRouteService {
     @Transactional(readOnly = true)
     public Route viewRoute(Long routeId) throws RouteException {
         return getExistingRoute(routeId);
+    }
+
+
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getTotalRouteCount() throws RouteException {
+        long count = routeRepository.count();
+
+        if (count == 0) {
+            throw new RouteException("No routes available at the moment");
+        }
+
+        return count;
     }
 
 

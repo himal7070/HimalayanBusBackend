@@ -4,10 +4,12 @@ import com.himalayanbus.exception.BusException;
 import com.himalayanbus.persistence.entity.Bus;
 import com.himalayanbus.service.IBusService;
 import jakarta.annotation.security.RolesAllowed;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -63,6 +65,35 @@ public class BusController {
         Bus bus = busService.viewBus(busId);
         return ResponseEntity.status(HttpStatus.OK).body(bus);
     }
+
+    @GetMapping("/count")
+    @RolesAllowed("ADMIN")
+    public ResponseEntity<String> getTotalBusCount() {
+        try {
+            long count = busService.countAllBuses();
+            return ResponseEntity.ok("Total : " + count);
+        } catch (BusException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+    }
+
+
+    @GetMapping("/search/{routeFrom}/{routeTo}")
+    @RolesAllowed("USER")
+    public ResponseEntity<List<Bus>> searchBusByRoute(
+            @PathVariable String routeFrom,
+            @PathVariable String routeTo,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate journeyDate
+    ) throws BusException {
+
+            List<Bus> busList = busService.searchBusByRoute(routeFrom, routeTo, journeyDate);
+            return ResponseEntity.status(HttpStatus.OK).body(busList);
+
+    }
+
+
+
 
 
 }

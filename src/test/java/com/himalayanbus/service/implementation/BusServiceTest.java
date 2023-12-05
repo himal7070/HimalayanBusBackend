@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,7 +99,7 @@ class BusServiceTest {
         Bus busToDelete = new Bus();
         busToDelete.setBusId(busId);
         busToDelete.setAvailableSeats(40);
-        busToDelete.setTotalSeats(40); // No scheduled seats
+        busToDelete.setTotalSeats(40);
 
         // Mock behavior for busRepository
         when(busRepository.findById(busId)).thenReturn(Optional.of(busToDelete));
@@ -127,7 +128,7 @@ class BusServiceTest {
         Bus busToDelete = new Bus();
         busToDelete.setBusId(busId);
         busToDelete.setAvailableSeats(30);
-        busToDelete.setTotalSeats(40); // Scheduled seats exist
+        busToDelete.setTotalSeats(40);
 
         // Mock behavior for busRepository
         when(busRepository.findById(busId)).thenReturn(Optional.of(busToDelete));
@@ -341,11 +342,11 @@ class BusServiceTest {
     @Test
     void testUpdateBus_WhenScheduledSeatsExist_ThrowsException() {
         Bus existingBus = new Bus();
-        existingBus.setAvailableSeats(30); // Some seats have been scheduled
+        existingBus.setAvailableSeats(30);
         existingBus.setTotalSeats(40);
 
         Bus newBusDetails = new Bus();
-        newBusDetails.setAvailableSeats(35); // New seat configuration
+        newBusDetails.setAvailableSeats(35);
 
         when(busRepository.findById(anyLong())).thenReturn(Optional.of(existingBus));
 
@@ -353,6 +354,70 @@ class BusServiceTest {
     }
 
 
+
+    @Test
+    void testCountAllBuses_BusesExist() {
+        long expectedCount = 10;
+
+        when(busRepository.count()).thenReturn(expectedCount);
+
+        try {
+            long count = busService.countAllBuses();
+            assertEquals(expectedCount, count);
+            verify(busRepository, times(1)).count();
+        } catch (BusException e) {
+            fail("BusException should not be thrown");
+        }
+    }
+
+    @Test
+    void testCountAllBuses_NoBusesAvailable() {
+        when(busRepository.count()).thenReturn(0L);
+
+        assertThrows(BusException.class, () -> busService.countAllBuses());
+        verify(busRepository, times(1)).count();
+    }
+
+
+    @Test
+    void testSearchBusByRoute() {
+        // Given
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        LocalDate journeyDate = LocalDate.now().plusDays(3);
+
+        List<Bus> mockBusList = new ArrayList<>();
+        Bus bus1 = new Bus();
+        bus1.setRouteFrom("City A");
+        bus1.setRouteTo("City B");
+        bus1.setJourneyDate(journeyDate);
+        bus1.setDepartureTime(LocalTime.NOON);
+        mockBusList.add(bus1);
+
+        Bus bus2 = new Bus();
+        bus2.setRouteFrom("City A");
+        bus2.setRouteTo("City B");
+        bus2.setJourneyDate(journeyDate);
+        bus2.setDepartureTime(LocalTime.of(14, 30));
+        mockBusList.add(bus2);
+
+        when(busRepository.findByRoute_RouteFromAndRoute_RouteTo("City A", "City B")).thenReturn(mockBusList);
+
+        List<Bus> result;
+        try {
+            result = busService.searchBusByRoute("City A", "City B", journeyDate);
+            assertNotNull(result);
+            assertFalse(result.isEmpty());
+
+            List<Bus> filteredBuses = result.stream()
+                    .filter(bus -> bus.getJourneyDate().equals(journeyDate))
+                    .filter(bus -> bus.getDepartureTime().atDate(bus.getJourneyDate()).isAfter(currentDateTime))
+                    .toList();
+
+            assertFalse(filteredBuses.isEmpty());
+        } catch (BusException e) {
+            fail("BusException should not be thrown");
+        }
+    }
 
 
 

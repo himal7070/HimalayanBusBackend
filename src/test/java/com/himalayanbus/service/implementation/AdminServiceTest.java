@@ -90,7 +90,6 @@ class AdminServiceTest {
     @Test
     void testUpdateAdminPassword_AdminNotFound() {
         Long adminId = 1L;
-        String newPassword = "newPassword";
 
         when(userRepository.findById(adminId)).thenReturn(Optional.empty());
 
@@ -98,6 +97,31 @@ class AdminServiceTest {
         assertThrows(AdminException.class, () -> adminService.updateAdmin(new User(), adminId));
         verify(userRepository, times(1)).findById(adminId);
         verifyNoMoreInteractions(userRepository, passwordEncoder);
+    }
+
+
+
+    @Test
+    void testCountAdmins_AdminsExist() {
+        long expectedCount = 3;
+
+        when(userRepository.countAdmins()).thenReturn(expectedCount);
+
+        try {
+            long count = adminService.countAdmins();
+            assertEquals(expectedCount, count);
+            verify(userRepository, times(1)).countAdmins();
+        } catch (AdminException e) {
+            fail("AdminException should not be thrown");
+        }
+    }
+
+    @Test
+    void testCountAdmins_NoAdminsAvailable() {
+        when(userRepository.countAdmins()).thenReturn(0L);
+
+        assertThrows(AdminException.class, () -> adminService.countAdmins());
+        verify(userRepository, times(1)).countAdmins();
     }
 
 
