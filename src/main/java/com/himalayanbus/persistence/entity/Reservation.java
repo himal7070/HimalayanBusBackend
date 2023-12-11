@@ -1,6 +1,5 @@
 package com.himalayanbus.persistence.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -40,9 +39,6 @@ public class Reservation {
     @ManyToOne
     private Bus bus;
 
-    @ManyToOne
-    @JsonIgnore
-    private User user;
 
     @ManyToOne
     @JoinColumn(name = "passenger_id")

@@ -59,12 +59,14 @@ public class BusController {
         return ResponseEntity.status(HttpStatus.OK).body(busList);
     }
 
+
     @GetMapping("viewBus/{busId}")
     @RolesAllowed("ADMIN")
     public ResponseEntity<Bus> viewBus(@PathVariable Long busId) throws BusException {
         Bus bus = busService.viewBus(busId);
         return ResponseEntity.status(HttpStatus.OK).body(bus);
     }
+
 
     @GetMapping("/count")
     @RolesAllowed("ADMIN")

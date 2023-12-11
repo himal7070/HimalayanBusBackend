@@ -28,10 +28,12 @@ public class ReservationController {
 
     @PostMapping("/add")
     @RolesAllowed("USER")
-    public ResponseEntity<Reservation> addReservation(@RequestBody ReservationDTO dto) throws ReservationException {
-        Reservation reservation = reservationService.addReservation(dto);
+    public ResponseEntity<Reservation> addReservation(@RequestBody ReservationDTO dto,
+                                                      @RequestParam Long busId) throws ReservationException {
+        Reservation reservation = reservationService.addReservation(dto, busId);
         return ResponseEntity.status(HttpStatus.CREATED).body(reservation);
     }
+
 
 
     @PutMapping("/update/{reservationId}")
@@ -54,7 +56,7 @@ public class ReservationController {
 
 
     @GetMapping("/all")
-    @RolesAllowed("Admin")
+    @RolesAllowed("ADMIN")
     public ResponseEntity<List<Reservation>> getAllReservations() throws ReservationException {
         List<Reservation> reservations = reservationService.getAllReservation();
         return ResponseEntity.status(HttpStatus.OK).body(reservations);
@@ -74,24 +76,13 @@ public class ReservationController {
         return ResponseEntity.status(HttpStatus.OK).body(reservation);
     }
 
-//    @GetMapping("/count")
-//    @RolesAllowed("ADMIN")
-//    public ResponseEntity<String> countActiveReservationsForToday() {
-//        try {
-//            long count = reservationService.countActiveReservationsForToday();
-//            return ResponseEntity.ok("Today : " + count);
-//        } catch (ReservationException e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-//        }
-//
-//    }
 
     @GetMapping("/count")
     @RolesAllowed("ADMIN")
     public ResponseEntity<Object> countActiveReservationsForToday() {
         try {
             long count = reservationService.countActiveReservationsForToday();
-            return ResponseEntity.ok(Map.of("message", "Active reservations for today", "count", count));
+            return ResponseEntity.ok(Map.of("Total", count));
         } catch (ReservationException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }

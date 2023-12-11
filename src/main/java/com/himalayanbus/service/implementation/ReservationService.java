@@ -2,19 +2,17 @@ package com.himalayanbus.service.implementation;
 
 import com.himalayanbus.exception.ReservationException;
 import com.himalayanbus.persistence.entity.*;
-import com.himalayanbus.persistence.repository.IBusRepository;
-import com.himalayanbus.persistence.repository.IReservationRepository;
-import com.himalayanbus.persistence.repository.IRouteRepository;
-import com.himalayanbus.persistence.repository.IUserRepository;
+import com.himalayanbus.persistence.repository.*;
 import com.himalayanbus.security.token.AccessToken;
 import com.himalayanbus.service.IReservationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.scheduling.annotation.Scheduled;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservationService implements IReservationService {
@@ -23,36 +21,76 @@ public class ReservationService implements IReservationService {
     private final IBusRepository busRepository;
     private final IUserRepository userRepository;
     private final IRouteRepository routeRepository;
+
+    private final IPassengerRepository passengerRepository;
     private final AccessToken requestAccessToken;
     private static final String USER_NOT_FOUND_MESSAGE = "User not found with the provided token";
 
     public ReservationService(IReservationRepository reservationRepository, IBusRepository busRepository,
-                              IUserRepository userRepository, IRouteRepository routeRepository,
+                              IUserRepository userRepository, IRouteRepository routeRepository, IPassengerRepository passengerRepository,
                               AccessToken requestAccessToken) {
         this.reservationRepository = reservationRepository;
         this.busRepository = busRepository;
         this.userRepository = userRepository;
         this.routeRepository = routeRepository;
+        this.passengerRepository = passengerRepository;
         this.requestAccessToken = requestAccessToken;
     }
 
 
 
-
     @Override
     @Transactional
-    public Reservation addReservation(ReservationDTO dto) throws ReservationException {
+    public Reservation addReservation(ReservationDTO dto, Long busId) throws ReservationException {
         User user = getUserFromToken();
 
+        Passenger passenger = user.getPassenger();
+        if (passenger == null) {
+            throw new ReservationException("Passenger details not found for the user");
+        }
+
+        Optional<Bus> optionalBus = busRepository.findById(busId);
+        Bus bus = optionalBus.orElseThrow(() -> new ReservationException("Bus not found with given bus ID: " + busId));
+
         Route route = findRoute(dto.getDepartureLocation(), dto.getDestination());
-        Bus bus = findBusForRoute(route, dto.getBookedSeat());
 
-        Reservation reservation = createReservation(dto, user, bus);
+        if (!bus.getRoute().equals(route)) {
+            throw new ReservationException("The specified bus is not assigned to the provided route");
+        }
 
-        updateBusAvailability(bus, dto.getBookedSeat());
+        Reservation reservation = createReservation(dto, passenger, bus);
+
+        updateBusAvailability(bus, dto.getBookedSeat(), false);
+        updateReservationStatus(reservation, bus);
 
         return reservationRepository.save(reservation);
     }
+
+    private Reservation createReservation(ReservationDTO dto, Passenger passenger, Bus bus) throws ReservationException {
+        Reservation reservation = new Reservation();
+
+        if (dto.getJourneyDate().isBefore(LocalDate.now())) {
+            throw new ReservationException("Journey Date should be in the future");
+        }
+
+        reservation.setDepartureLocation(dto.getDepartureLocation());
+        reservation.setDestination(dto.getDestination());
+        reservation.setDate(dto.getJourneyDate());
+        reservation.setStatus("Active");
+        reservation.setDate(LocalDate.now());
+        reservation.setTime(LocalTime.now());
+        reservation.setJourneyDate(dto.getJourneyDate());
+        reservation.setBus(bus);
+        reservation.setFare(bus.getFare() * dto.getBookedSeat());
+        reservation.setBookedSeat(dto.getBookedSeat());
+
+        reservation.setPassenger(passenger);
+
+        return reservation;
+    }
+
+
+
 
     @Override
     @Transactional
@@ -92,11 +130,10 @@ public class ReservationService implements IReservationService {
                 .orElseThrow(() -> new ReservationException("Reservation with given id is not found"));
     }
 
+
     @Override
     @Transactional
     public List<Reservation> getAllReservation() throws ReservationException {
-        getUserFromToken();
-
         List<Reservation> reservations = reservationRepository.findAll();
 
         if (reservations.isEmpty()) {
@@ -105,6 +142,7 @@ public class ReservationService implements IReservationService {
 
         return reservations;
     }
+
 
     @Override
     @Transactional
@@ -115,13 +153,36 @@ public class ReservationService implements IReservationService {
 
         Passenger passenger = currentUser.getPassenger();
         if (passenger != null) {
-            return passenger.getReservationList();
+            List<Reservation> reservations = passenger.getReservationList();
+
+            return reservations.stream()
+                    .filter(reservation -> {
+                        String status = reservation.getStatus();
+                        return status.equals("Active") || status.equals("Expired")|| status.equals("Cancelled");
+                    })
+                    .collect(Collectors.toList());
         } else {
-            throw new ReservationException("No reservations found for the current user");
+            throw new ReservationException("You dont have any reservation at the moment.");
         }
     }
 
 
+
+    private void updateReservationStatus(Reservation reservation, Bus bus) {
+        if (bus != null && bus.getArrivalTime() != null && reservation.getJourneyDate() != null) {
+            LocalDate currentDate = LocalDate.now();
+            LocalTime currentTime = LocalTime.now();
+            LocalDate arrivalDate = bus.getJourneyDate();
+            LocalTime arrivalTime = bus.getArrivalTime();
+
+            if (currentDate.isEqual(arrivalDate) && currentTime.isBefore(arrivalTime)) {
+                reservation.setStatus("Active");
+            } else if (currentDate.isEqual(arrivalDate) && currentTime.isAfter(arrivalTime)) {
+                reservation.setStatus("Expired");
+            }
+
+        }
+    }
 
 
 
@@ -149,6 +210,7 @@ public class ReservationService implements IReservationService {
     }
 
 
+
     @Override
     @Transactional
     public Reservation deleteReservation(Long rid) throws ReservationException {
@@ -159,18 +221,42 @@ public class ReservationService implements IReservationService {
 
         validateReservationDeletion(rid, currentDate);
 
-        updateBusAvailability(reservation.getBus(), -reservation.getBookedSeat());
-        reservationRepository.delete(reservation);
+        reservation.setStatus("Cancelled");
+        reservationRepository.save(reservation);
+
+        updateBusAvailability(reservation.getBus(), reservation.getBookedSeat(), true);
+
+        scheduledReservationDeletion();
 
         return reservation;
     }
 
 
-    User getUserFromToken() throws ReservationException {
-        Long userIdFromToken = requestAccessToken.getPassengerId();
-        return userRepository.findById(userIdFromToken)
-                .orElseThrow(() -> new ReservationException(USER_NOT_FOUND_MESSAGE));
+
+
+    @Scheduled(initialDelay = 24 * 60 * 60 * 1000, fixedRate = 24 * 60 * 60 * 1000)
+    public void scheduledReservationDeletion() {
+        LocalDate currentDate = LocalDate.now();
+
+        List<Reservation> reservationsToDelete = reservationRepository
+                .findByStatusAndJourneyDateBefore("Cancelled", currentDate.minusDays(1));
+
+        reservationRepository.deleteAll(reservationsToDelete);
     }
+
+
+
+
+    User getUserFromToken() throws ReservationException {
+        Long passengerIdFromToken = requestAccessToken.getPassengerId();
+        Passenger passenger = passengerRepository.findById(passengerIdFromToken)
+                .orElseThrow(() -> new ReservationException("Passenger not found with the given ID: " + passengerIdFromToken));
+
+        return passenger.getUser();
+    }
+
+
+
 
     private Route findRoute(String departureLocation, String destination) throws ReservationException {
         Route route = routeRepository.findByRouteFromAndRouteTo(departureLocation, destination);
@@ -181,6 +267,7 @@ public class ReservationService implements IReservationService {
 
         return route;
     }
+
 
     private Bus findBusForRoute(Route route, int bookedSeats) throws ReservationException {
         Bus bus = busRepository.findByRoute(route);
@@ -198,39 +285,20 @@ public class ReservationService implements IReservationService {
         return bus;
     }
 
-    private Reservation createReservation(ReservationDTO dto, User user, Bus bus) throws ReservationException {
-        Reservation reservation = new Reservation();
 
-        if (dto.getJourneyDate().isBefore(LocalDate.now())) {
-            throw new ReservationException("Journey Date should be in the future");
+
+    private void updateBusAvailability(Bus bus, int bookedSeats, boolean increaseSeats) {
+        int availableSeats = bus.getAvailableSeats();
+
+        if (increaseSeats) {
+            availableSeats += bookedSeats;
+        } else {
+            availableSeats -= bookedSeats;
         }
 
-        reservation.setDepartureLocation(dto.getDepartureLocation());
-        reservation.setDestination(dto.getDestination());
-        reservation.setDate(dto.getJourneyDate());
-        reservation.setStatus("Successful");
-        reservation.setDate(LocalDate.now());
-        reservation.setTime(LocalTime.now());
-        reservation.setJourneyDate(dto.getJourneyDate());
-        reservation.setBus(bus);
-        reservation.setFare(bus.getFare() * dto.getBookedSeat());
-        reservation.setBookedSeat(dto.getBookedSeat());
-        reservation.setUser(user);
-
-        Passenger passenger = user.getPassenger();
-        if (passenger == null) {
-            throw new ReservationException("Passenger details not found for the user");
-        }
-
-        reservation.setPassenger(passenger);
-
-        return reservation;
-    }
-
-    private void updateBusAvailability(Bus bus, int bookedSeats) {
-        int availableSeats = bus.getAvailableSeats() - bookedSeats;
         bus.setAvailableSeats(availableSeats);
     }
+
 
     private Reservation getReservationForUser(User user, Long reservationId) throws ReservationException {
         Passenger passenger = user.getPassenger();
@@ -280,17 +348,19 @@ public class ReservationService implements IReservationService {
 
     @Override
     @Transactional(readOnly = true)
-    public long countActiveReservationsForToday() throws ReservationException {
+    public long countActiveReservationsForToday() {
         LocalDate currentDate = LocalDate.now();
 
         long activeReservationsCount = reservationRepository.countReservationsByDate(currentDate);
 
-        if (activeReservationsCount == 0) {
-            throw new ReservationException("No active reservations for today");
-        }
+        long canceledReservationsCount = reservationRepository.countReservationsByDateAndStatus(currentDate, "Cancelled");
 
-        return activeReservationsCount;
+        return Math.max(activeReservationsCount - canceledReservationsCount, 0);
     }
+
+
+
+
 
 
 }

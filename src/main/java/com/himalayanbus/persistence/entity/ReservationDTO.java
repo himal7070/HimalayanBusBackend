@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class ReservationDTO {
 
-    private Long reservationID;
+
 
     private String departureLocation;
 

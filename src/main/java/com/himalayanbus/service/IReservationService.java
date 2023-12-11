@@ -10,9 +10,9 @@ import java.util.List;
 public interface IReservationService {
 
 
-    @Transactional
-    Reservation addReservation(ReservationDTO dto) throws ReservationException;
 
+    @Transactional
+    Reservation addReservation(ReservationDTO dto, Long busId) throws ReservationException;
 
     @Transactional
     Reservation updateReservation(Long reservationId, ReservationDTO dto) throws ReservationException;

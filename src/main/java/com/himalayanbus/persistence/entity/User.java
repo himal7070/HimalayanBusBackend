@@ -25,6 +25,8 @@ public class User {
     private String email;
     private String password;
 
+    private String imageProfileUrl;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",

@@ -13,7 +13,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -52,19 +54,53 @@ public class PassengerService implements IPassengerService {
         return savedUser;
     }
 
+
+    public Passenger getPassengerById(Long passengerID) {
+        return passengerRepository.findById(passengerID).orElse(null);
+    }
+
     @Override
     @Transactional(rollbackFor = UserException.class)
-    public User updatePassenger(Long userID, User updatedUser, Passenger updatedPassenger) throws UserException {
-        User existingUser = getUserById(userID);
+    public Passenger updatePassengerDetails(Long passengerID, Passenger updatedPassenger) throws UserException {
+        Passenger existingPassenger = getPassengerById(passengerID);
 
-        if (updatedUser != null) {
-            updatePasswordIfNotEmpty(existingUser, updatedUser.getPassword());
+        if (existingPassenger != null && updatedPassenger != null) {
+
+            return passengerRepository.save(existingPassenger);
+        } else {
+            throw new UserException("Passenger details or passenger not found.");
         }
-
-        updatePassengerDetailsIfExists(existingUser, updatedPassenger);
-
-        return userRepository.save(existingUser);
     }
+
+
+    @Override
+    @Transactional(rollbackFor = UserException.class)
+    public User updatePasswordForPassenger(Long passengerID, String newPassword) throws UserException {
+        Passenger existingPassenger = getPassengerById(passengerID);
+
+        if (existingPassenger != null) {
+            User user = existingPassenger.getUser();
+
+            if (user != null) {
+                if (newPassword != null && !newPassword.isEmpty()) {
+                    user.setPassword(newPassword);
+                } else {
+                    throw new UserException("New password cannot be empty.");
+                }
+
+                return userRepository.save(user);
+            } else {
+                throw new UserException("User not found for the provided passenger.");
+            }
+        } else {
+            throw new UserException("Passenger not found with the provided ID.");
+        }
+    }
+
+
+
+
+
 
 
     @Override
@@ -105,6 +141,43 @@ public class PassengerService implements IPassengerService {
 
         return count;
     }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public Object getUserInformationByEmail(String email) throws UserException {
+        User user = userRepository.findByEmail(email);
+
+        if (user != null) {
+            Map<String, Object> userInformation = new HashMap<>();
+            if (user.getImageProfileUrl() != null) {
+                userInformation.put("imageProfileUrl", user.getImageProfileUrl());
+            }
+
+            if (user.getPassenger() != null) {
+                Passenger passenger = user.getPassenger();
+                userInformation.put("passengerDetails", passenger);
+                if (passenger.getFirstName() != null && passenger.getLastName() != null) {
+                    userInformation.put("firstName", passenger.getFirstName());
+                    userInformation.put("lastName", passenger.getLastName());
+                    userInformation.put("phoneNumber", passenger.getPhoneNumber());
+                } else {
+                    userInformation.put("email", user.getEmail());
+                }
+            } else {
+                userInformation.put("userDetails", user);
+                userInformation.put("email", user.getEmail());
+            }
+
+            return userInformation;
+        } else {
+            throw new UserException("User not found with this email!");
+        }
+
+    }
+
+
+
 
 
 
@@ -181,4 +254,10 @@ public class PassengerService implements IPassengerService {
         return userRepository.findById(userID)
                 .orElseThrow(() -> new UserException("Invalid user ID!"));
     }
+
+
+
+
+
+
 }

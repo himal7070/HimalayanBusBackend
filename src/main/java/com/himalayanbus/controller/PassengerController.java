@@ -34,12 +34,6 @@ public class PassengerController {
     }
 
 
-    @PutMapping("/update/{userID}")
-    @RolesAllowed({"USER", "ADMIN"})
-    public ResponseEntity<User> updatePassenger(@PathVariable Long userID, @RequestBody User userUpdate, @RequestBody Passenger passengerUpdate) throws UserException {
-        User updatedUser = passengerService.updatePassenger(userID, userUpdate, passengerUpdate);
-        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
-    }
 
 
     @DeleteMapping("/delete/{userID}")
@@ -72,6 +66,49 @@ public class PassengerController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
+
+
+    @GetMapping("/user/{userEmail}")
+    @RolesAllowed({"USER", "ADMIN"})
+    public ResponseEntity<Object> getUserInformationByEmail(@PathVariable String userEmail) {
+        try {
+            Object userInformation = passengerService.getUserInformationByEmail(userEmail);
+            return ResponseEntity.ok(userInformation);
+        } catch (UserException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+
+
+    @PutMapping("/updateDetails/{passengerID}")
+    @RolesAllowed({"USER", "ADMIN"})
+    public ResponseEntity<Passenger> updatePassengerDetails(
+            @PathVariable Long passengerID,
+            @RequestBody Passenger updatedPassenger
+    ) {
+        try {
+            Passenger updatedPassengerInfo = passengerService.updatePassengerDetails(passengerID, updatedPassenger);
+            return ResponseEntity.ok(updatedPassengerInfo);
+        } catch (UserException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
+    @PutMapping("/updatePassword/{passengerID}")
+    @RolesAllowed({"USER", "ADMIN"})
+    public ResponseEntity<User> updatePasswordForPassenger(
+            @PathVariable Long passengerID,
+            @RequestBody String newPassword
+    ) {
+        try {
+            User updatedUser = passengerService.updatePasswordForPassenger(passengerID, newPassword);
+            return ResponseEntity.ok(updatedUser);
+        } catch (UserException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+    }
+
 
 
 

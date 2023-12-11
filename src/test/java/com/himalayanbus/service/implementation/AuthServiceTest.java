@@ -1,6 +1,5 @@
 package com.himalayanbus.service.implementation;
 
-import com.himalayanbus.dtos.AuthResponse;
 import com.himalayanbus.dtos.LoginRequest;
 import com.himalayanbus.exception.AdminException;
 import com.himalayanbus.exception.InvalidCredentialsException;
@@ -16,7 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
+import com.himalayanbus.dtos.AuthResponse;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -81,8 +80,6 @@ class AuthServiceTest {
         // Assert
         assertNotNull(authResponse);
         assertEquals("mocked-access-token", authResponse.getAccessToken());
-        assertFalse(authResponse.getUserRoles().isEmpty());
-        assertEquals(1, authResponse.getUserRoles().size());
 
         // Verify
         verify(userRepository, times(1)).findByEmail(email);
@@ -90,6 +87,7 @@ class AuthServiceTest {
         verify(accessTokenEncoder, times(1)).encode(any());
         verifyNoMoreInteractions(userRepository, passwordEncoder, accessTokenEncoder);
     }
+
 
     @Test
     void testLogin_InvalidCredentials() {

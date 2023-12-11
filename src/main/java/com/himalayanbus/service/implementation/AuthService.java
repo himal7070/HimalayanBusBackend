@@ -40,11 +40,7 @@ public class AuthService implements IAuthService {
         }
 
         String accessToken = generateAccessToken(user);
-        String rolesAsString = String.join(",", user.getRoles().stream()
-                .map(userRole -> userRole.getRole().toString())
-                .toList());
-
-        return new AuthResponse(accessToken, List.of(rolesAsString));
+        return new AuthResponse(accessToken);
     }
 
 
