@@ -68,18 +68,6 @@ public class PassengerController {
     }
 
 
-    @GetMapping("/user/{userEmail}")
-    @RolesAllowed({"USER", "ADMIN"})
-    public ResponseEntity<Object> getUserInformationByEmail(@PathVariable String userEmail) {
-        try {
-            Object userInformation = passengerService.getUserInformationByEmail(userEmail);
-            return ResponseEntity.ok(userInformation);
-        } catch (UserException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
-    }
-
-
 
     @PutMapping("/updateDetails/{passengerID}")
     @RolesAllowed({"USER", "ADMIN"})
@@ -94,22 +82,6 @@ public class PassengerController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
-
-    @PutMapping("/updatePassword/{passengerID}")
-    @RolesAllowed({"USER", "ADMIN"})
-    public ResponseEntity<User> updatePasswordForPassenger(
-            @PathVariable Long passengerID,
-            @RequestBody String newPassword
-    ) {
-        try {
-            User updatedUser = passengerService.updatePasswordForPassenger(passengerID, newPassword);
-            return ResponseEntity.ok(updatedUser);
-        } catch (UserException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-        }
-    }
-
-
 
 
 

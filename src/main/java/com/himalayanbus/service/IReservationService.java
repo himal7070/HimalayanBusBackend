@@ -14,11 +14,6 @@ public interface IReservationService {
     @Transactional
     Reservation addReservation(ReservationDTO dto, Long busId) throws ReservationException;
 
-    @Transactional
-    Reservation updateReservation(Long reservationId, ReservationDTO dto) throws ReservationException;
-
-    @Transactional
-    Reservation viewReservation(Long reservationId) throws ReservationException;
 
     @Transactional
     List<Reservation> getAllReservation() throws ReservationException;
@@ -30,10 +25,10 @@ public interface IReservationService {
     @Transactional
     Reservation deleteReservation(Long reservationId) throws ReservationException;
 
-    @Transactional
-    List<Reservation> viewReservationByUserId(Long uid) throws ReservationException;
 
     @Transactional(readOnly = true)
     long countActiveReservationsForToday() throws ReservationException;
 
+    @Transactional
+    List<Reservation> getAllReservationsByBusId(Long busId) throws ReservationException;
 }

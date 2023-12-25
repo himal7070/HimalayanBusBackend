@@ -4,6 +4,7 @@ import com.himalayanbus.exception.BusException;
 import com.himalayanbus.persistence.entity.Bus;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -33,4 +34,8 @@ public interface IBusService {
 
     @Transactional
     List<Bus> searchBusByRoute(String routeFrom, String routeTo, LocalDate journeyDate) throws BusException;
+
+
+    @Transactional
+    String delayBusDeparture(Long busId, Duration delayDuration) throws BusException;
 }

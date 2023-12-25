@@ -13,9 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 
@@ -55,9 +53,6 @@ public class PassengerService implements IPassengerService {
     }
 
 
-    public Passenger getPassengerById(Long passengerID) {
-        return passengerRepository.findById(passengerID).orElse(null);
-    }
 
     @Override
     @Transactional(rollbackFor = UserException.class)
@@ -65,41 +60,15 @@ public class PassengerService implements IPassengerService {
         Passenger existingPassenger = getPassengerById(passengerID);
 
         if (existingPassenger != null && updatedPassenger != null) {
+            existingPassenger.setFirstName(updatedPassenger.getFirstName());
+            existingPassenger.setLastName(updatedPassenger.getLastName());
+            existingPassenger.setPhoneNumber(updatedPassenger.getPhoneNumber());
 
             return passengerRepository.save(existingPassenger);
         } else {
             throw new UserException("Passenger details or passenger not found.");
         }
     }
-
-
-    @Override
-    @Transactional(rollbackFor = UserException.class)
-    public User updatePasswordForPassenger(Long passengerID, String newPassword) throws UserException {
-        Passenger existingPassenger = getPassengerById(passengerID);
-
-        if (existingPassenger != null) {
-            User user = existingPassenger.getUser();
-
-            if (user != null) {
-                if (newPassword != null && !newPassword.isEmpty()) {
-                    user.setPassword(newPassword);
-                } else {
-                    throw new UserException("New password cannot be empty.");
-                }
-
-                return userRepository.save(user);
-            } else {
-                throw new UserException("User not found for the provided passenger.");
-            }
-        } else {
-            throw new UserException("Passenger not found with the provided ID.");
-        }
-    }
-
-
-
-
 
 
 
@@ -143,45 +112,15 @@ public class PassengerService implements IPassengerService {
     }
 
 
-    @Override
-    @Transactional(readOnly = true)
-    public Object getUserInformationByEmail(String email) throws UserException {
-        User user = userRepository.findByEmail(email);
-
-        if (user != null) {
-            Map<String, Object> userInformation = new HashMap<>();
-            if (user.getImageProfileUrl() != null) {
-                userInformation.put("imageProfileUrl", user.getImageProfileUrl());
-            }
-
-            if (user.getPassenger() != null) {
-                Passenger passenger = user.getPassenger();
-                userInformation.put("passengerDetails", passenger);
-                if (passenger.getFirstName() != null && passenger.getLastName() != null) {
-                    userInformation.put("firstName", passenger.getFirstName());
-                    userInformation.put("lastName", passenger.getLastName());
-                    userInformation.put("phoneNumber", passenger.getPhoneNumber());
-                } else {
-                    userInformation.put("email", user.getEmail());
-                }
-            } else {
-                userInformation.put("userDetails", user);
-                userInformation.put("email", user.getEmail());
-            }
-
-            return userInformation;
-        } else {
-            throw new UserException("User not found with this email!");
-        }
-
-    }
-
-
-
-
-
 
     //--------------------------- Sub-divided methods [dark coder - aryal]----------------------------------
+
+
+    @Override
+    public Passenger getPassengerById(Long passengerID) {
+        return passengerRepository.findById(passengerID).orElse(null);
+    }
+
 
     private void validateNewUser(User user) throws UserException {
         if (userRepository.existsByEmail(user.getEmail())) {
@@ -209,7 +148,24 @@ public class PassengerService implements IPassengerService {
         return passwordEncoder.encode(password);
     }
 
+
+    private void deletePassengerDetails(User user, Passenger passenger) {
+        user.setPassenger(null);
+        userRepository.save(user);
+        passengerRepository.delete(passenger);
+    }
+
+    private User getUserById(Long userID) throws UserException {
+        return userRepository.findById(userID)
+                .orElseThrow(() -> new UserException("Invalid user ID!"));
+    }
+
+
+
+
+
     private void createOrUpdatePassengerDetails(User user, User savedUser) {
+
         Optional.ofNullable(user.getPassenger()).ifPresent(passenger -> {
             Passenger passengerDetails = new Passenger();
             passengerDetails.setFirstName(passenger.getFirstName());
@@ -222,38 +178,12 @@ public class PassengerService implements IPassengerService {
 
             savedUser.setPassenger(passengerDetails);
             userRepository.save(savedUser);
+
         });
+
     }
 
 
-    private void updatePasswordIfNotEmpty(User existingUser, String updatedPassword) {
-        if (!updatedPassword.isEmpty()) {
-            String hashedPassword = passwordEncoder.encode(updatedPassword);
-            existingUser.setPassword(hashedPassword);
-        }
-    }
-
-    private void updatePassengerDetailsIfExists(User existingUser, Passenger updatedPassenger) {
-        Passenger existingPassenger = existingUser.getPassenger();
-        if (existingPassenger != null && updatedPassenger != null) {
-            existingPassenger.setFirstName(updatedPassenger.getFirstName());
-            existingPassenger.setLastName(updatedPassenger.getLastName());
-            existingPassenger.setPhoneNumber(updatedPassenger.getPhoneNumber());
-
-            passengerRepository.save(existingPassenger);
-        }
-    }
-
-    private void deletePassengerDetails(User user, Passenger passenger) {
-        user.setPassenger(null);
-        userRepository.save(user);
-        passengerRepository.delete(passenger);
-    }
-
-    private User getUserById(Long userID) throws UserException {
-        return userRepository.findById(userID)
-                .orElseThrow(() -> new UserException("Invalid user ID!"));
-    }
 
 
 

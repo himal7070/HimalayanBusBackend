@@ -73,44 +73,39 @@ class PassengerServiceTest {
         verify(passengerRepository, times(1)).save(any());
     }
 
+
     @Test
-    void testUpdatePassenger_ValidData() throws UserException {
+    void testUpdatePassengerDetails_ValidPassenger() throws UserException {
         // Arrange
-        Long userId = 1L;
-        User existingUser = new User();
-        existingUser.setUserID(userId);
-        existingUser.setPassword("existingPassword");
+        Long passengerId = 1L;
         Passenger existingPassenger = new Passenger();
-        existingPassenger.setFirstName("John");
-        existingPassenger.setLastName("Doe");
-        existingUser.setPassenger(existingPassenger);
+        existingPassenger.setPassengerId(passengerId);
 
-        User updatedUser = new User();
-        updatedUser.setPassword("newPassword");
         Passenger updatedPassenger = new Passenger();
-        updatedPassenger.setFirstName("Jane");
-        updatedPassenger.setLastName("Doe");
+        updatedPassenger.setFirstName("Himal");
+        updatedPassenger.setLastName("Aryal");
+        updatedPassenger.setPhoneNumber("1234567890");
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        when(passwordEncoder.encode("newPassword")).thenReturn("hashedPassword");
+        when(passengerRepository.findById(passengerId)).thenReturn(Optional.of(existingPassenger));
         when(passengerRepository.save(any())).thenReturn(updatedPassenger);
-        when(userRepository.save(existingUser)).thenReturn(existingUser);
 
         // Act
-        User resultUser = passengerService.updatePassenger(userId, updatedUser, updatedPassenger);
+        Passenger resultPassenger = passengerService.updatePassengerDetails(passengerId, updatedPassenger);
 
         // Assert
-        assertNotNull(resultUser);
-        assertEquals("hashedPassword", resultUser.getPassword());
-        assertEquals("Jane", resultUser.getPassenger().getFirstName());
-        assertEquals("Doe", resultUser.getPassenger().getLastName());
+        assertNotNull(resultPassenger);
+        assertEquals("Himal", resultPassenger.getFirstName());
+        assertEquals("Aryal", resultPassenger.getLastName());
+        assertEquals("1234567890", resultPassenger.getPhoneNumber());
 
         // Verify
-        verify(userRepository, times(1)).findById(userId);
-        verify(passwordEncoder, times(1)).encode("newPassword");
+        verify(passengerRepository, times(1)).findById(passengerId);
         verify(passengerRepository, times(1)).save(any());
-        verify(userRepository, times(1)).save(existingUser);
     }
+
+
+
+
 
     @Test
     void testDeletePassenger_ValidUser() throws UserException {
@@ -136,8 +131,6 @@ class PassengerServiceTest {
         verify(passengerRepository, times(1)).delete(passenger);
         verify(userRepository, times(1)).delete(user);
     }
-
-
 
 
 
@@ -172,18 +165,6 @@ class PassengerServiceTest {
         verify(passengerRepository, times(0)).save(any());
     }
 
-
-
-    @Test
-    void testUpdatePassenger_PassengerAndUserDetailsNull_NoChanges() {
-        // Arrange
-        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
-
-        // Act and Assert
-        UserException exception = assertThrows(UserException.class, () -> passengerService.updatePassenger(1L, null, null));
-
-        assertEquals("Invalid user ID!", exception.getMessage());
-    }
 
 
 
@@ -267,9 +248,6 @@ class PassengerServiceTest {
         verify(userRepository, times(2)).save(user);
         verify(passengerRepository, times(1)).save(any());
     }
-
-
-
 
 
 

@@ -45,7 +45,10 @@ dependencies {
 //	implementation 'com.google.oauth-client:google-oauth-client:1.33.3'
 //	implementation 'com.google.auth:google-auth-library-oauth2-client:2.1.0'
 
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
+//	implementation 'io.socket:socket.io-client:1.0.0'
 
 
 }

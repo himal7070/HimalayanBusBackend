@@ -36,24 +36,6 @@ public class ReservationController {
 
 
 
-    @PutMapping("/update/{reservationId}")
-    @RolesAllowed("USER")
-    public ResponseEntity<Reservation> updateReservation(
-            @PathVariable Long reservationId,
-            @RequestBody ReservationDTO dto
-    ) throws ReservationException {
-        Reservation updatedReservation = reservationService.updateReservation(reservationId, dto);
-        return ResponseEntity.ok(updatedReservation);
-    }
-
-
-    @GetMapping("/viewReservation/{reservationId}")
-    @RolesAllowed("USER")
-    public ResponseEntity<Reservation> viewReservation(@PathVariable Long reservationId) throws ReservationException {
-        Reservation reservation = reservationService.viewReservation(reservationId);
-        return ResponseEntity.status(HttpStatus.OK).body(reservation);
-    }
-
 
     @GetMapping("/all")
     @RolesAllowed("ADMIN")

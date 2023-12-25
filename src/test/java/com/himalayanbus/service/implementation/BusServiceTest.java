@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -182,20 +183,34 @@ class BusServiceTest {
 
     @Test
     void testViewAllBus() {
-        List<Bus> buses = new ArrayList<>();
-        buses.add(new Bus());
+        LocalDateTime currentDateTime = LocalDateTime.now();
 
+        // Create a sample bus list with one entry
+        List<Bus> buses = new ArrayList<>();
+        Bus futureBus = new Bus();
+        futureBus.setJourneyDate(LocalDate.now().plusDays(1));
+        futureBus.setDepartureTime(LocalTime.now().plusHours(1));
+        buses.add(futureBus);
+
+        // Mocking the behavior of the busRepository.findAll() method to return the sample list
         when(busRepository.findAll()).thenReturn(buses);
 
         try {
             List<Bus> result = busService.viewAllBus();
             assertNotNull(result);
             assertEquals(1, result.size());
+
+            // Verifying that the findAll method was called once
             verify(busRepository, times(1)).findAll();
+
+            Bus retrievedBus = result.get(0);
+            LocalDateTime departureDateTime = LocalDateTime.of(retrievedBus.getJourneyDate(), retrievedBus.getDepartureTime());
+            assertTrue(departureDateTime.isAfter(currentDateTime) || departureDateTime.toLocalDate().isEqual(LocalDate.now()));
         } catch (BusException e) {
             fail("BusException should not be thrown");
         }
     }
+
 
 
 
@@ -422,6 +437,120 @@ class BusServiceTest {
 
 
 
+
+    @Test
+    void testUpdateBusDetails_SetBusName() {
+        Bus existingBus = new Bus();
+        Bus newBusDetails = new Bus();
+        newBusDetails.setBusName("New Bus Name");
+
+        // Call updateBusDetails method
+        busService.updateBusDetails(existingBus, newBusDetails);
+
+        // Assert that the bus name is updated
+        assertEquals("New Bus Name", existingBus.getBusName());
+    }
+
+    @Test
+    void testUpdateBusDetails_SetDepartureTime() {
+        Bus existingBus = new Bus();
+        Bus newBusDetails = new Bus();
+        LocalTime departureTime = LocalTime.of(9, 0);
+        newBusDetails.setDepartureTime(departureTime);
+
+        // Call updateBusDetails method
+        busService.updateBusDetails(existingBus, newBusDetails);
+
+        // Assert that the departure time is updated
+        assertEquals(departureTime, existingBus.getDepartureTime());
+    }
+
+    @Test
+    void testUpdateBusDetails_SetDriverName() {
+        Bus existingBus = new Bus();
+        Bus newBusDetails = new Bus();
+        newBusDetails.setDriverName("New Driver Name");
+
+        // Call updateBusDetails method
+        busService.updateBusDetails(existingBus, newBusDetails);
+
+        // Assert that the driver name is updated
+        assertEquals("New Driver Name", existingBus.getDriverName());
+    }
+
+
+
+
+    @Test
+    void testDelayBusDeparture_WhenBusFoundAndDelayValid_UpdatesDepartureAndArrivalTime() {
+        // Arrange
+        Long busId = 1L;
+        Bus busToUpdate = new Bus();
+        busToUpdate.setBusId(busId);
+        LocalTime initialDepartureTime = LocalTime.of(8, 0);
+        busToUpdate.setDepartureTime(initialDepartureTime);
+        LocalTime initialArrivalTime = LocalTime.of(12, 0);
+        busToUpdate.setArrivalTime(initialArrivalTime);
+        LocalDate journeyDate = LocalDate.now().plusDays(1);
+        busToUpdate.setJourneyDate(journeyDate);
+
+        Duration delayDuration = Duration.ofMinutes(30);
+
+        // Mock behavior for busRepository
+        when(busRepository.findById(busId)).thenReturn(Optional.of(busToUpdate));
+        when(busRepository.save(any(Bus.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        try {
+            String result = busService.delayBusDeparture(busId, delayDuration);
+
+            // Assert
+            assertEquals("Bus with ID 1 has been updated successfully!", result);
+            verify(busRepository, times(1)).findById(busId);
+            verify(busRepository, times(1)).save(any(Bus.class));
+
+            // Check updated times
+            assertEquals(initialDepartureTime.plus(delayDuration), busToUpdate.getDepartureTime());
+            assertEquals(initialArrivalTime.plus(delayDuration), busToUpdate.getArrivalTime());
+        } catch (BusException e) {
+            fail("BusException should not be thrown");
+        }
+    }
+
+    @Test
+    void testDelayBusDeparture_WhenBusIdNotFound_ThrowBusException() {
+        // Arrange
+        Long busId = 1L;
+        Duration delayDuration = Duration.ofMinutes(30);
+
+        when(busRepository.findById(busId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(BusException.class, () -> busService.delayBusDeparture(busId, delayDuration),
+                "BusException should be thrown when the bus ID is not found");
+
+        verify(busRepository, times(1)).findById(busId);
+        verify(busRepository, never()).save(any());
+    }
+
+    @Test
+    void testDelayBusDeparture_WhenJourneyDatePassed_ThrowBusException() {
+        // Arrange
+        Long busId = 1L;
+        Duration delayDuration = Duration.ofMinutes(30);
+        Bus busToUpdate = new Bus();
+        busToUpdate.setBusId(busId);
+        busToUpdate.setJourneyDate(LocalDate.now().minusDays(1));
+
+        when(busRepository.findById(busId)).thenReturn(Optional.of(busToUpdate));
+
+        // Act & Assert
+        assertThrows(BusException.class, () -> busService.delayBusDeparture(busId, delayDuration),
+                "BusException should be thrown when the journey date has passed");
+
+        verify(busRepository, times(1)).findById(busId);
+        verify(busRepository, never()).save(any());
+    }
 
 
 

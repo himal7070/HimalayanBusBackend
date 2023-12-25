@@ -9,8 +9,10 @@ import com.himalayanbus.service.IBusService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -28,6 +30,7 @@ public class BusService implements IBusService {
     public BusService(IBusRepository busRepository, IRouteRepository routeRepository) {
         this.busRepository = busRepository;
         this.routeRepository = routeRepository;
+
     }
 
     @Override
@@ -163,14 +166,28 @@ public class BusService implements IBusService {
     @Override
     @Transactional
     public List<Bus> viewAllBus() throws BusException {
+        LocalDateTime currentDateTime = LocalDateTime.now();
+
         List<Bus> busList = busRepository.findAll();
 
         if (busList.isEmpty()) {
             throw new BusException("No buses found in the system");
         }
 
-        return busList;
+        List<Bus> futureBuses = busList.stream()
+                .filter(bus -> {
+                    LocalDateTime departureDateTime = LocalDateTime.of(bus.getJourneyDate(), bus.getDepartureTime());
+                    return departureDateTime.isAfter(currentDateTime) || departureDateTime.toLocalDate().isEqual(LocalDate.now());
+                })
+                .toList();
+
+        if (futureBuses.isEmpty()) {
+            throw new BusException("No future departure date buses found in the system");
+        }
+
+        return futureBuses;
     }
+
 
 
     @Override
@@ -221,8 +238,44 @@ public class BusService implements IBusService {
     }
 
 
+    @Override
+    @Transactional
+    public String delayBusDeparture(Long busId, Duration delayDuration) throws BusException {
+        Optional<Bus> optionalBus = busRepository.findById(busId);
+
+        if (optionalBus.isPresent()) {
+            Bus busToUpdate = optionalBus.get();
+
+            if (busToUpdate.getJourneyDate() == null || busToUpdate.getDepartureTime() == null) {
+                throw new BusException("Journey date or departure time is missing!");
+            }
 
 
+            LocalDateTime currentDateTime = LocalDateTime.now();
+            LocalDateTime journeyDateTime = LocalDateTime.of(busToUpdate.getJourneyDate(), busToUpdate.getDepartureTime());
+
+            if (currentDateTime.isAfter(journeyDateTime)) {
+                throw new BusException("Cannot update the bus after the journey date has passed!");
+            }
+
+            LocalTime currentDepartureTime = busToUpdate.getDepartureTime();
+            LocalTime currentArrivalTime = busToUpdate.getArrivalTime();
+
+            LocalTime updatedDepartureTime = currentDepartureTime.plus(delayDuration);
+
+            Duration departureTimeDifference = Duration.between(currentDepartureTime, updatedDepartureTime);
+            LocalTime updatedArrivalTime = currentArrivalTime.plus(departureTimeDifference);
+
+            busToUpdate.setDepartureTime(updatedDepartureTime);
+            busToUpdate.setArrivalTime(updatedArrivalTime);
+
+            busRepository.save(busToUpdate);
+
+            return "Bus with ID " + busId + " has been updated successfully!";
+        }
+
+        throw new BusException(BUS_ID_NOT_FOUND_MESSAGE + busId + NOT_EXIST_MESSAGE);
+    }
 
 
 

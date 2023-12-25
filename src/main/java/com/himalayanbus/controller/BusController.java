@@ -9,11 +9,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 
 @RestController
 @RequestMapping("/himalayanbus/bus")
+@CrossOrigin(origins = "http://localhost:5173")
 public class BusController {
 
     private final IBusService busService;
@@ -94,6 +96,38 @@ public class BusController {
 
     }
 
+//
+//    @PatchMapping("/delayDeparture/{busId}")
+//    @RolesAllowed("ADMIN")
+//    public ResponseEntity<Bus> delayBusDeparture(
+//            @PathVariable Long busId,
+//            @RequestParam(name = "delayMinutes") Long delayMinutes
+//    ) throws BusException {
+//        Duration delayDuration = Duration.ofMinutes(delayMinutes);
+//
+//        // Call the service to delay the bus departure
+//        Bus updatedBus = busService.delayBusDeparture(busId, delayDuration);
+//
+//        // Return the updated bus details in the response
+//        return ResponseEntity.ok(updatedBus);
+//    }
+
+    @PutMapping("/delayDeparture/{busId}/{delayMinutes}")
+    @RolesAllowed("ADMIN")
+    public ResponseEntity<String> delayBusDeparture(
+            @PathVariable Long busId,
+            @PathVariable Long delayMinutes
+    ) {
+        try {
+            Duration delayDuration = Duration.ofMinutes(delayMinutes);
+
+            String updatedBusMessage = busService.delayBusDeparture(busId, delayDuration);
+
+            return ResponseEntity.ok(updatedBusMessage);
+        } catch (BusException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
 
 
 
