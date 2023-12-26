@@ -48,10 +48,15 @@ public class BusController {
 
     @DeleteMapping("/delete/{busId}")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<String> deleteBus(@PathVariable Long busId) throws BusException {
-        busService.deleteBus(busId);
-        return ResponseEntity.status(HttpStatus.OK).body("Bus deleted successfully");
+    public ResponseEntity<String> deleteBus(@PathVariable Long busId) {
+        try {
+            busService.deleteBus(busId);
+            return ResponseEntity.status(HttpStatus.OK).body("Bus deleted successfully");
+        } catch (BusException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete bus: " + e.getMessage());
+        }
     }
+
 
 
     @GetMapping("/type/{busType}")
@@ -96,21 +101,6 @@ public class BusController {
 
     }
 
-//
-//    @PatchMapping("/delayDeparture/{busId}")
-//    @RolesAllowed("ADMIN")
-//    public ResponseEntity<Bus> delayBusDeparture(
-//            @PathVariable Long busId,
-//            @RequestParam(name = "delayMinutes") Long delayMinutes
-//    ) throws BusException {
-//        Duration delayDuration = Duration.ofMinutes(delayMinutes);
-//
-//        // Call the service to delay the bus departure
-//        Bus updatedBus = busService.delayBusDeparture(busId, delayDuration);
-//
-//        // Return the updated bus details in the response
-//        return ResponseEntity.ok(updatedBus);
-//    }
 
     @PutMapping("/delayDeparture/{busId}/{delayMinutes}")
     @RolesAllowed("ADMIN")

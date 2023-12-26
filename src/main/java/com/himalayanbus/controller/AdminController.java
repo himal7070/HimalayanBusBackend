@@ -32,7 +32,6 @@ public class AdminController {
         return new ResponseEntity<>(updatedAdmin, HttpStatus.OK);
     }
 
-
     @GetMapping("/count")
     @RolesAllowed("ADMIN")
     public ResponseEntity<String> getCountOfAdmins() {
