@@ -37,7 +37,8 @@ public class WebSecurityConfig {
                         configurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(registry ->
                         registry.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()                 // CORS pre-flight requests should be public
-                                .requestMatchers(HttpMethod.POST, "/himalayanbus/passenger/add","/himalayanbus/admin/add", "/himalayanbus/login").permitAll() // Creating a student and login are public
+                                .requestMatchers(HttpMethod.POST, "/himalayanbus/passenger/add","/himalayanbus/user/completeReset","/himalayanbus/user/resetPassword","/himalayanbus/admin/add", "/himalayanbus/login").permitAll()
+                                .requestMatchers(HttpMethod.PUT, "/himalayanbus/user/completeReset").permitAll()// Creating a student and login are public
                                 .requestMatchers(SWAGGER_UI_RESOURCES).permitAll()
                                 .requestMatchers("/ws/**").permitAll()
 //                                .requestMatchers(HttpMethod.PATCH, "/himalayanbus/bus/delayDeparture/**").hasRole("ADMIN")

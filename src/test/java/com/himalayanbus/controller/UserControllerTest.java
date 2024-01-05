@@ -90,4 +90,75 @@ class UserControllerTest {
 
         return user;
     }
+
+
+
+    @Test
+    void testResetUserPassword_Success() throws UserException {
+        String email = "aryal@himal.nl";
+        String successMessage = "Password reset initiated successfully. Please check your email for further instructions.";
+
+        ResponseEntity<String> expectedResponse = ResponseEntity.ok(successMessage);
+
+        doNothing().when(userService).initiatePasswordReset(email);
+
+        ResponseEntity<String> responseEntity = userController.resetUserPassword(email);
+
+        assertEquals(expectedResponse, responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        verify(userService, times(1)).initiatePasswordReset(email);
+    }
+
+    @Test
+    void testResetUserPassword_Failure() throws UserException {
+        String email = "aryal@himal.nl";
+        String errorMessage = "Failed to initiate password reset: User not found for the provided email during password reset.";
+
+        doThrow(new UserException("User not found for the provided email during password reset.")).when(userService).initiatePasswordReset(email);
+
+        ResponseEntity<String> responseEntity = userController.resetUserPassword(email);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(errorMessage, responseEntity.getBody());
+    }
+
+
+
+    @Test
+    void testCompletePasswordReset_Success() throws UserException {
+        String email = "aryal@himal.nl";
+        String resetToken = "validToken";
+        String newPassword = "newPass";
+        String successMessage = "Password reset successfully.";
+
+        ResponseEntity<String> expectedResponse = ResponseEntity.ok(successMessage);
+
+        doNothing().when(userService).completePasswordReset(email, resetToken, newPassword);
+
+        ResponseEntity<String> responseEntity = userController.completePasswordReset(email, resetToken, newPassword);
+
+        assertEquals(expectedResponse, responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        verify(userService, times(1)).completePasswordReset(email, resetToken, newPassword);
+    }
+
+    @Test
+    void testCompletePasswordReset_Failure() throws UserException {
+        String email = "aryal@himal.nl";
+        String resetToken = "invalidToken";
+        String newPassword = "newPass";
+        String errorMessage = "Failed to reset password: Invalid or expired reset token.";
+
+        doThrow(new UserException("Invalid or expired reset token.")).when(userService).completePasswordReset(email, resetToken, newPassword);
+
+        ResponseEntity<String> responseEntity = userController.completePasswordReset(email, resetToken, newPassword);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals(errorMessage, responseEntity.getBody());
+    }
+
+
+
+
+
 }

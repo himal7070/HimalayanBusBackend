@@ -35,6 +35,12 @@ public class AuthService implements IAuthService {
     @Transactional
     public AuthResponse login(LoginRequest loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail());
+
+        if (user != null && user.getResetToken() != null && user.getResetTokenExpiry() != null) {
+
+            throw new RuntimeException("Password reset required before login.");
+        }
+
         if (user == null || !matchesPassword(loginRequest.getPassword(), user.getPassword())) {
             throw new InvalidCredentialsException();
         }

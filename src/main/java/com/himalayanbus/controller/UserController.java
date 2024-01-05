@@ -42,6 +42,29 @@ public class UserController {
     }
 
 
+    @PostMapping("/resetPassword")
+    public ResponseEntity<String> resetUserPassword(@RequestParam String email) {
+        try {
+            userService.initiatePasswordReset(email);
+            return ResponseEntity.ok("Password reset initiated successfully. Please check your email for further instructions.");
+        } catch (UserException e) {
+            return ResponseEntity.badRequest().body("Failed to initiate password reset: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/completeReset")
+    public ResponseEntity<String> completePasswordReset(
+            @RequestParam String email,
+            @RequestParam String resetToken,
+            @RequestParam String newPassword
+    ) {
+        try {
+            userService.completePasswordReset(email, resetToken, newPassword);
+            return ResponseEntity.ok("Password reset successfully.");
+        } catch (UserException e) {
+            return ResponseEntity.badRequest().body("Failed to reset password: " + e.getMessage());
+        }
+    }
 
 
 
