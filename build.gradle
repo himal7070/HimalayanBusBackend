@@ -50,7 +50,9 @@ dependencies {
 
 //	implementation 'io.socket:socket.io-client:1.0.0'
 
-	testImplementation 'org.springframework.security:spring-security-test'
+//	testImplementation 'org.springframework.security:spring-security-test'
+
+	implementation 'jakarta.mail:jakarta.mail-api:1.6.5'
 
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 

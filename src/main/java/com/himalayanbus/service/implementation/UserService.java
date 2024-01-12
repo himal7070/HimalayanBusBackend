@@ -105,17 +105,26 @@ public class UserService implements IUserService {
     }
 
     private void sendResetEmail(String userEmail, String resetToken) {
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(userEmail);
-        mailMessage.setSubject("Password Reset Request");
-        mailMessage.setText("Your password reset token is: " + resetToken);
+        try {
+            SimpleMailMessage mailMessage = new SimpleMailMessage();
+            mailMessage.setTo(userEmail);
+            mailMessage.setSubject("Password Reset Request");
+            mailMessage.setText("Your password reset token is: " + resetToken);
 
-        javaMailSender.send(mailMessage);
+            javaMailSender.send(mailMessage);
+
+            System.out.println("Email sent successfully");
+        } catch (Exception e) {
+
+            e.printStackTrace();
+            System.out.println("Error sending email");
+        }
     }
 
 
+
     private String generateUniqueToken() {
-        return UUID.randomUUID().toString().replaceAll("-", "");
+        return UUID.randomUUID().toString().replace("-", "");
     }
 
 

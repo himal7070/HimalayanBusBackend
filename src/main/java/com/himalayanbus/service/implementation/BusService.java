@@ -204,12 +204,23 @@ public class BusService implements IBusService {
 
 
 
+
     @Override
     @Transactional
-    public List<Bus> searchBusByRoute(String routeFrom, String routeTo, LocalDate journeyDate) throws BusException {
+    public List<Bus> searchBusByRoute(Optional<String> routeFrom, Optional<String> routeTo, LocalDate journeyDate) throws BusException {
         LocalDateTime currentDateTime = LocalDateTime.now();
 
-        List<Bus> busList = busRepository.findByRoute_RouteFromAndRoute_RouteTo(routeFrom, routeTo);
+        List<Bus> busList;
+
+        if (routeFrom.isPresent() && routeTo.isPresent()) {
+            busList = busRepository.findByRoute_RouteFromContainingAndRoute_RouteToContaining(routeFrom.get(), routeTo.get());
+        } else if (routeFrom.isPresent()) {
+            busList = busRepository.findByRoute_RouteFromContaining(routeFrom.get());
+        } else if (routeTo.isPresent()) {
+            busList = busRepository.findByRoute_RouteToContaining(routeTo.get());
+        } else {
+            throw new BusException("At least one route field should be provided");
+        }
 
         if (busList.isEmpty()) {
             throw new BusException("No buses found for the given route");
@@ -225,7 +236,6 @@ public class BusService implements IBusService {
             }
         }
 
-
         List<Bus> futureBuses = busList.stream()
                 .filter(bus -> bus.getDepartureTime().atDate(bus.getJourneyDate()).isAfter(currentDateTime))
                 .toList();
@@ -236,6 +246,10 @@ public class BusService implements IBusService {
 
         return futureBuses;
     }
+
+
+
+
 
 
     @Override

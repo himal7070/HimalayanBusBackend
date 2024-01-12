@@ -16,6 +16,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -144,7 +145,7 @@ class BusControllerTest {
         String routeFrom = "City A";
         String routeTo = "City B";
         List<Bus> busListByRoute = new ArrayList<>();
-        when(busService.searchBusByRoute(eq(routeFrom), eq(routeTo), any())).thenReturn(busListByRoute);
+        when(busService.searchBusByRoute(eq(Optional.of(routeFrom)), eq(Optional.of(routeTo)), any())).thenReturn(busListByRoute);
 
         // Act
         ResponseEntity<List<Bus>> responseEntity = busController.searchBusByRoute(routeFrom, routeTo, LocalDate.now());
@@ -153,6 +154,7 @@ class BusControllerTest {
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertEquals(busListByRoute, responseEntity.getBody());
     }
+
 
     @Test
     void testDelayBusDeparture() throws BusException {

@@ -415,11 +415,11 @@ class BusServiceTest {
         bus2.setDepartureTime(LocalTime.of(14, 30));
         mockBusList.add(bus2);
 
-        when(busRepository.findByRoute_RouteFromAndRoute_RouteTo("City A", "City B")).thenReturn(mockBusList);
+        when(busRepository.findByRoute_RouteFromContainingAndRoute_RouteToContaining("City A", "City B")).thenReturn(mockBusList);
 
         List<Bus> result;
         try {
-            result = busService.searchBusByRoute("City A", "City B", journeyDate);
+            result = busService.searchBusByRoute(Optional.of("City A"), Optional.of("City B"), journeyDate);
             assertNotNull(result);
             assertFalse(result.isEmpty());
 

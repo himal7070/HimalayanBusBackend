@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface IBusService {
     @Transactional
@@ -32,9 +33,9 @@ public interface IBusService {
     @Transactional(readOnly = true)
     long countAllBuses() throws BusException;
 
-    @Transactional
-    List<Bus> searchBusByRoute(String routeFrom, String routeTo, LocalDate journeyDate) throws BusException;
 
+    @Transactional
+    List<Bus> searchBusByRoute(Optional<String> routeFrom, Optional<String> routeTo, LocalDate journeyDate) throws BusException;
 
     @Transactional
     String delayBusDeparture(Long busId, Duration delayDuration) throws BusException;

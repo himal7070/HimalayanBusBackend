@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/himalayanbus/bus")
@@ -88,18 +89,28 @@ public class BusController {
     }
 
 
-    @GetMapping("/search/{routeFrom}/{routeTo}")
+
+    @GetMapping("/search")
     @RolesAllowed("USER")
     public ResponseEntity<List<Bus>> searchBusByRoute(
-            @PathVariable String routeFrom,
-            @PathVariable String routeTo,
+            @RequestParam(required = false) String routeFrom,
+            @RequestParam(required = false) String routeTo,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate journeyDate
     ) throws BusException {
+        if (routeFrom == null && routeTo == null) {
+            throw new IllegalArgumentException("At least one route field should be provided");
+        }
 
-            List<Bus> busList = busService.searchBusByRoute(routeFrom, routeTo, journeyDate);
-            return ResponseEntity.status(HttpStatus.OK).body(busList);
+        List<Bus> busList = busService.searchBusByRoute(
+                Optional.ofNullable(routeFrom),
+                Optional.ofNullable(routeTo),
+                journeyDate
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(busList);
 
     }
+
 
 
     @PutMapping("/delayDeparture/{busId}/{delayMinutes}")
