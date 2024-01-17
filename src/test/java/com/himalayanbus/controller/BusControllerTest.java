@@ -2,6 +2,9 @@ package com.himalayanbus.controller;
 
 import com.himalayanbus.exception.BusException;
 import com.himalayanbus.persistence.entity.Bus;
+import com.himalayanbus.security.token.AccessToken;
+import com.himalayanbus.security.token.IAccessControlService;
+import com.himalayanbus.security.token.impl.AccessTokenImpl;
 import com.himalayanbus.service.IBusService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,10 +16,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,6 +31,9 @@ class BusControllerTest {
     @Mock
     private IBusService busService;
 
+    @Mock
+    private IAccessControlService accessControlService;
+
     @InjectMocks
     private BusController busController;
 
@@ -40,8 +43,11 @@ class BusControllerTest {
         Bus busToAdd = createSampleBus();
         when(busService.addBus(any())).thenReturn(busToAdd);
 
+        AccessToken mockAccessToken = new AccessTokenImpl("testUser", null, Collections.singletonList("ADMIN"));
+        when(accessControlService.extractAccessToken(any())).thenReturn(mockAccessToken);
+
         // Act
-        ResponseEntity<Bus> responseEntity = busController.addBus(busToAdd);
+        ResponseEntity<Bus> responseEntity = busController.addBus(busToAdd, "Bearer mockToken");
 
         // Assert
         assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
@@ -54,13 +60,17 @@ class BusControllerTest {
         List<Bus> busList = new ArrayList<>();
         when(busService.viewAllBus()).thenReturn(busList);
 
+        AccessToken mockAccessToken = new AccessTokenImpl("testUser", null, Collections.singletonList("ADMIN"));
+        when(accessControlService.extractAccessToken(any())).thenReturn(mockAccessToken);
+
         // Act
-        ResponseEntity<List<Bus>> responseEntity = busController.viewAllBuses();
+        ResponseEntity<List<Bus>> responseEntity = busController.viewAllBuses("Bearer mockToken");
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertEquals(busList, responseEntity.getBody());
     }
+
 
     @Test
     void testUpdateBus() throws BusException {
@@ -69,8 +79,11 @@ class BusControllerTest {
         Bus updatedBus = createSampleBus();
         when(busService.updateBus(eq(busId), any())).thenReturn(updatedBus);
 
+        AccessToken mockAccessToken = new AccessTokenImpl("testUser", null, Collections.singletonList("ADMIN"));
+        when(accessControlService.extractAccessToken(any())).thenReturn(mockAccessToken);
+
         // Act
-        ResponseEntity<Bus> responseEntity = busController.updateBus(busId, updatedBus);
+        ResponseEntity<Bus> responseEntity = busController.updateBus(busId, updatedBus, "Bearer mockToken");
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -84,15 +97,16 @@ class BusControllerTest {
         // method to throw BusException
         doThrow(new BusException("Failed to delete bus")).when(busService).deleteBus(busIdToDelete);
 
+        AccessToken mockAccessToken = new AccessTokenImpl("testUser", null, Collections.singletonList("ADMIN"));
+        when(accessControlService.extractAccessToken(any())).thenReturn(mockAccessToken);
+
         // Act
-        ResponseEntity<String> responseEntity = busController.deleteBus(busIdToDelete);
+        ResponseEntity<String> responseEntity = busController.deleteBus(busIdToDelete, "Bearer mockToken");
 
         // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
         assertTrue(Objects.requireNonNull(responseEntity.getBody()).startsWith("Failed to delete bus"));
     }
-
-
 
 
     @Test
@@ -102,13 +116,17 @@ class BusControllerTest {
         Bus busToView = createSampleBus();
         when(busService.viewBus(busIdToView)).thenReturn(busToView);
 
+        AccessToken mockAccessToken = new AccessTokenImpl("testUser", null, Collections.singletonList("ADMIN"));
+        when(accessControlService.extractAccessToken(any())).thenReturn(mockAccessToken);
+
         // Act
-        ResponseEntity<Bus> responseEntity = busController.viewBus(busIdToView);
+        ResponseEntity<Bus> responseEntity = busController.viewBus(busIdToView, "Bearer mockToken");
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         assertEquals(busToView, responseEntity.getBody());
     }
+
 
     @Test
     void testViewBusByType() throws BusException {
@@ -117,8 +135,11 @@ class BusControllerTest {
         List<Bus> busListByType = new ArrayList<>();
         when(busService.viewBusByType(busType)).thenReturn(busListByType);
 
+        AccessToken mockAccessToken = new AccessTokenImpl("testUser", null, Collections.singletonList("ADMIN"));
+        when(accessControlService.extractAccessToken(any())).thenReturn(mockAccessToken);
+
         // Act
-        ResponseEntity<List<Bus>> responseEntity = busController.viewBusByType(busType);
+        ResponseEntity<List<Bus>> responseEntity = busController.viewBusByType(busType, "Bearer mockToken");
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -131,8 +152,11 @@ class BusControllerTest {
         long busCount = 10L;
         when(busService.countAllBuses()).thenReturn(busCount);
 
+        AccessToken mockAccessToken = new AccessTokenImpl("testUser", null, Collections.singletonList("ADMIN"));
+        when(accessControlService.extractAccessToken(any())).thenReturn(mockAccessToken);
+
         // Act
-        ResponseEntity<String> responseEntity = busController.getTotalBusCount();
+        ResponseEntity<String> responseEntity = busController.getTotalBusCount("Bearer mockToken");
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -147,8 +171,11 @@ class BusControllerTest {
         List<Bus> busListByRoute = new ArrayList<>();
         when(busService.searchBusByRoute(eq(Optional.of(routeFrom)), eq(Optional.of(routeTo)), any())).thenReturn(busListByRoute);
 
+        AccessToken mockAccessToken = new AccessTokenImpl("testUser", null, Collections.singletonList("USER"));
+        when(accessControlService.extractAccessToken(any())).thenReturn(mockAccessToken);
+
         // Act
-        ResponseEntity<List<Bus>> responseEntity = busController.searchBusByRoute(routeFrom, routeTo, LocalDate.now());
+        ResponseEntity<List<Bus>> responseEntity = busController.searchBusByRoute(routeFrom, routeTo, LocalDate.now(), "Bearer mockToken");
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -163,8 +190,11 @@ class BusControllerTest {
         Long delayMinutes = 30L;
         when(busService.delayBusDeparture(eq(busId), any())).thenReturn("Delay successful");
 
+        AccessToken mockAccessToken = new AccessTokenImpl("testUser", null, Collections.singletonList("ADMIN"));
+        when(accessControlService.extractAccessToken(any())).thenReturn(mockAccessToken);
+
         // Act
-        ResponseEntity<String> responseEntity = busController.delayBusDeparture(busId, delayMinutes);
+        ResponseEntity<String> responseEntity = busController.delayBusDeparture(busId, delayMinutes, "Bearer mockToken");
 
         // Assert
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

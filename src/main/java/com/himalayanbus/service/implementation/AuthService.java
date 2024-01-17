@@ -38,7 +38,7 @@ public class AuthService implements IAuthService {
 
         if (user != null && user.getResetToken() != null && user.getResetTokenExpiry() != null) {
 
-            throw new RuntimeException("Password reset required before login.");
+            throw new InvalidCredentialsException();
         }
 
         if (user == null || !matchesPassword(loginRequest.getPassword(), user.getPassword())) {
@@ -56,13 +56,13 @@ public class AuthService implements IAuthService {
     }
 
     private String generateAccessToken(User user) {
-        Long passengerId = user.getPassenger() != null ? user.getPassenger().getPassengerId() : null;
+        Long userID = user.getUserID();
         List<String> roles = user.getRoles().stream()
                 .map(userRole -> userRole.getRole().toString())
                 .toList();
 
         return accessTokenEncoder.encode(
-                new AccessTokenImpl(user.getEmail(), passengerId, roles));
+                new AccessTokenImpl(user.getEmail(), userID, roles));
     }
 
 

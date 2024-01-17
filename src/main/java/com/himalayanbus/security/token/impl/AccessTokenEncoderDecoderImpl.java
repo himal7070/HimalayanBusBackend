@@ -38,8 +38,8 @@ public class AccessTokenEncoderDecoderImpl implements AccessTokenEncoder, Access
         if (!CollectionUtils.isEmpty(accessToken.getRoles())) {
             claimsMap.put("roles", accessToken.getRoles());
         }
-        if (accessToken.getPassengerId() != null) {
-            claimsMap.put("passengerId", accessToken.getPassengerId());
+        if (accessToken.getUserID() != null) {
+            claimsMap.put("userID", accessToken.getUserID());
         }
 
         Instant now = Instant.now();
@@ -60,9 +60,9 @@ public class AccessTokenEncoderDecoderImpl implements AccessTokenEncoder, Access
             Claims claims = jwt.getBody();
 
             List<String> roles = claims.get("roles", List.class);
-            Long passengerId = claims.get("passengerId", Long.class);
+            Long userID = claims.get("userID", Long.class);
 
-            return new AccessTokenImpl(claims.getSubject(), passengerId, roles);
+            return new AccessTokenImpl(claims.getSubject(), userID, roles);
         } catch (JwtException e) {
             throw new InvalidAccessTokenException(e.getMessage());
         }

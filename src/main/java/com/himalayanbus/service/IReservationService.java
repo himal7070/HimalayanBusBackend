@@ -1,6 +1,7 @@
 package com.himalayanbus.service;
 
 import com.himalayanbus.exception.ReservationException;
+import com.himalayanbus.exception.UserException;
 import com.himalayanbus.persistence.entity.Reservation;
 import com.himalayanbus.persistence.entity.ReservationDTO;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,7 +13,7 @@ public interface IReservationService {
 
 
     @Transactional
-    Reservation addReservation(ReservationDTO dto, Long busId) throws ReservationException;
+    Reservation addReservation(ReservationDTO dto, Long busId) throws ReservationException, UserException;
 
 
     @Transactional
@@ -20,10 +21,10 @@ public interface IReservationService {
 
 
     @Transactional
-    List<Reservation> viewReservationsForCurrentUser() throws ReservationException;
+    List<Reservation> viewReservationsForCurrentUser() throws ReservationException, UserException;
 
     @Transactional
-    Reservation deleteReservation(Long reservationId) throws ReservationException;
+    Reservation deleteReservation(Long reservationId) throws ReservationException, UserException;
 
 
     @Transactional(readOnly = true)

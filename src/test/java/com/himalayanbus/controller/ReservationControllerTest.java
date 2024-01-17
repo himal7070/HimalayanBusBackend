@@ -1,6 +1,7 @@
 package com.himalayanbus.controller;
 
 import com.himalayanbus.exception.ReservationException;
+import com.himalayanbus.exception.UserException;
 import com.himalayanbus.persistence.entity.Reservation;
 import com.himalayanbus.persistence.entity.ReservationDTO;
 import com.himalayanbus.service.IReservationService;
@@ -29,7 +30,7 @@ class ReservationControllerTest {
     private ReservationController reservationController;
 
     @Test
-    void testAddReservation() throws ReservationException {
+    void testAddReservation() throws ReservationException, UserException {
         ReservationDTO mockDTO = new ReservationDTO();
         Long busId = 1L;
         Reservation mockReservation = new Reservation();
@@ -58,7 +59,7 @@ class ReservationControllerTest {
 
 
     @Test
-    void testViewReservationsForCurrentUser() throws ReservationException {
+    void testViewReservationsForCurrentUser() throws ReservationException, UserException {
         List<Reservation> mockReservations = new ArrayList<>();
         when(reservationService.viewReservationsForCurrentUser()).thenReturn(mockReservations);
 
@@ -70,7 +71,7 @@ class ReservationControllerTest {
     }
 
     @Test
-    void testDeleteReservation() throws ReservationException {
+    void testDeleteReservation() throws ReservationException, UserException {
         Long reservationId = 1L;
         Reservation mockReservation = new Reservation();
         when(reservationService.deleteReservation(reservationId)).thenReturn(mockReservation);

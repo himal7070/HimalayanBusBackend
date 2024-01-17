@@ -5,6 +5,9 @@ import com.himalayanbus.persistence.entity.Passenger;
 import com.himalayanbus.persistence.entity.Role;
 import com.himalayanbus.persistence.entity.User;
 import com.himalayanbus.persistence.entity.UserRole;
+import com.himalayanbus.security.token.AccessToken;
+import com.himalayanbus.security.token.IAccessControlService;
+import com.himalayanbus.security.token.impl.AccessTokenImpl;
 import com.himalayanbus.service.IUserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,6 +29,9 @@ class UserControllerTest {
 
     @Mock
     private IUserService userService;
+
+    @Mock
+    private IAccessControlService accessControlService;
 
     @InjectMocks
     private UserController userController;
@@ -38,11 +45,16 @@ class UserControllerTest {
 
         when(userService.getUserInformationByEmail(userEmail)).thenReturn(mockUser);
 
-        ResponseEntity<Object> responseEntity = userController.getUserInformationByEmail(userEmail);
+        AccessToken accessToken = new AccessTokenImpl("aryal@himal.nl", 1L, Collections.singletonList("USER"));
+
+        ResponseEntity<Object> responseEntity = userController.getUserInformationByEmail(userEmail, String.valueOf(accessToken));
 
         assertEquals(mockUser, responseEntity.getBody());
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         verify(userService, times(1)).getUserInformationByEmail(userEmail);
+
+        // Verify access control service is called
+        verify(accessControlService, times(1)).checkUserAccess(any(), eq(userEmail));
     }
 
     @Test
@@ -54,12 +66,18 @@ class UserControllerTest {
 
         when(userService.updatePasswordByEmail(email, oldPassword, newPassword)).thenReturn(mockUpdatedUser);
 
-        ResponseEntity<User> responseEntity = userController.updatePasswordForUser(email, oldPassword, newPassword);
+        AccessToken accessToken = new AccessTokenImpl("aryal@himal.nl", 1L, Collections.singletonList("USER"));
+
+        ResponseEntity<User> responseEntity = userController.updatePasswordForUser(email, oldPassword, newPassword, String.valueOf(accessToken));
 
         assertEquals(mockUpdatedUser, responseEntity.getBody());
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         verify(userService, times(1)).updatePasswordByEmail(email, oldPassword, newPassword);
+
+        // Verify access control service is called
+        verify(accessControlService, times(1)).checkUserAccess(any(), eq(email));
     }
+
 
 
     public static User createMockUser() {

@@ -2,6 +2,7 @@ package com.himalayanbus.controller;
 
 
 import com.himalayanbus.exception.ReservationException;
+import com.himalayanbus.exception.UserException;
 import com.himalayanbus.persistence.entity.Reservation;
 import com.himalayanbus.persistence.entity.ReservationDTO;
 import com.himalayanbus.service.IReservationService;
@@ -29,7 +30,7 @@ public class ReservationController {
     @PostMapping("/add")
     @RolesAllowed("USER")
     public ResponseEntity<Reservation> addReservation(@RequestBody ReservationDTO dto,
-                                                      @RequestParam Long busId) throws ReservationException {
+                                                      @RequestParam Long busId) throws ReservationException, UserException {
         Reservation reservation = reservationService.addReservation(dto, busId);
         return ResponseEntity.status(HttpStatus.CREATED).body(reservation);
     }
@@ -46,14 +47,14 @@ public class ReservationController {
 
     @GetMapping("/current-user")
     @RolesAllowed("USER")
-    public ResponseEntity<List<Reservation>> viewReservationsForCurrentUser() throws ReservationException {
+    public ResponseEntity<List<Reservation>> viewReservationsForCurrentUser() throws ReservationException, UserException {
         List<Reservation> reservations = reservationService.viewReservationsForCurrentUser();
         return ResponseEntity.status(HttpStatus.OK).body(reservations);
     }
 
     @DeleteMapping("/delete/{reservationId}")
     @RolesAllowed("USER")
-    public ResponseEntity<Reservation> deleteReservation(@PathVariable Long reservationId) throws ReservationException {
+    public ResponseEntity<Reservation> deleteReservation(@PathVariable Long reservationId) throws ReservationException, UserException {
         Reservation reservation = reservationService.deleteReservation(reservationId);
         return ResponseEntity.status(HttpStatus.OK).body(reservation);
     }

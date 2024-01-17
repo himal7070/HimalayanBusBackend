@@ -12,8 +12,7 @@ public interface IPassengerService {
     User addPassenger(User user) throws UserException;
 
     @Transactional(rollbackFor = UserException.class)
-    Passenger updatePassengerDetails(Long passengerID, Passenger updatedPassenger) throws UserException;
-
+    Passenger updatePassengerDetails(Long userID, Passenger updatedPassenger) throws UserException;
 
     @Transactional(rollbackFor = UserException.class)
     User deletePassenger(Long userID) throws UserException;
@@ -24,6 +23,4 @@ public interface IPassengerService {
     @Transactional(readOnly = true)
     long getTotalPassengerCount() throws UserException;
 
-
-    Passenger getPassengerById(Long passengerID);
 }

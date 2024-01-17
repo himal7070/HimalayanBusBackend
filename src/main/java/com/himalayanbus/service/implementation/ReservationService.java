@@ -2,10 +2,7 @@ package com.himalayanbus.service.implementation;
 
 import com.himalayanbus.exception.ReservationException;
 import com.himalayanbus.persistence.entity.*;
-import com.himalayanbus.persistence.repository.IBusRepository;
-import com.himalayanbus.persistence.repository.IPassengerRepository;
-import com.himalayanbus.persistence.repository.IReservationRepository;
-import com.himalayanbus.persistence.repository.IRouteRepository;
+import com.himalayanbus.persistence.repository.*;
 import com.himalayanbus.security.token.AccessToken;
 import com.himalayanbus.service.IReservationService;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,25 +21,21 @@ public class ReservationService implements IReservationService {
     private final IReservationRepository reservationRepository;
     private final IBusRepository busRepository;
     private final IRouteRepository routeRepository;
-    private final IPassengerRepository passengerRepository;
-    private final AccessToken requestAccessToken;
-    private static final String USER_NOT_FOUND_MESSAGE = "User not found with the provided token";
 
+    private final IUserRepository userRepository;
+    private final AccessToken requestAccessToken;
     private static final String STATUS_CANCELLED = "Cancelled";
     private static final String STATUS_ACTIVE = "Active";
 
     public ReservationService(IReservationRepository reservationRepository, IBusRepository busRepository
-            , IRouteRepository routeRepository, IPassengerRepository passengerRepository,
+            , IRouteRepository routeRepository, IUserRepository userRepository,
                               AccessToken requestAccessToken) {
         this.reservationRepository = reservationRepository;
         this.busRepository = busRepository;
         this.routeRepository = routeRepository;
-        this.passengerRepository = passengerRepository;
+        this.userRepository = userRepository;
         this.requestAccessToken = requestAccessToken;
     }
-
-
-
 
 
     @Override
@@ -73,24 +66,34 @@ public class ReservationService implements IReservationService {
     }
 
 
-
     @Scheduled(fixedRate = 60000)
     public void updateReservationStatus() {
         List<Reservation> reservations = reservationRepository.findAll();
 
         for (Reservation reservation : reservations) {
-            if (reservation.getBus() != null && reservation.getBus().getArrivalTime() != null && reservation.getJourneyDate() != null) {
-                LocalDateTime currentDateTime = LocalDateTime.now();
-                LocalDateTime arrivalDateTime = LocalDateTime.of(reservation.getBus().getJourneyDate(), LocalTime.from(reservation.getBus().getArrivalTime()));
+            updateStatusBasedOnTime(reservation);
+        }
+    }
 
-                if (currentDateTime.isEqual(arrivalDateTime) || currentDateTime.isAfter(arrivalDateTime)) {
-                    reservation.setStatus("Expired");
-                } else {
-                    reservation.setStatus(STATUS_ACTIVE);
-                }
+    private void updateStatusBasedOnTime(Reservation reservation) {
+        if (reservation.getBus() == null || reservation.getBus().getArrivalTime() == null || reservation.getJourneyDate() == null) {
+            return;
+        }
 
-                reservationRepository.save(reservation);
-            }
+        LocalDateTime currentDateTime = LocalDateTime.now();
+        LocalDateTime arrivalDateTime = LocalDateTime.of(reservation.getBus().getJourneyDate(), LocalTime.from(reservation.getBus().getArrivalTime()));
+
+        if (currentDateTime.isEqual(arrivalDateTime) || currentDateTime.isAfter(arrivalDateTime)) {
+            updateStatus(reservation, "Expired");
+        } else {
+            updateStatus(reservation, STATUS_ACTIVE);
+        }
+    }
+
+    private void updateStatus(Reservation reservation, String newStatus) {
+        if (reservation.getStatus() == null || !reservation.getStatus().equals(STATUS_CANCELLED)) {
+            reservation.setStatus(newStatus);
+            reservationRepository.save(reservation);
         }
     }
 
@@ -121,18 +124,21 @@ public class ReservationService implements IReservationService {
     }
 
 
-
-
-
     User getUserFromToken() throws ReservationException {
-        Long passengerIdFromToken = requestAccessToken.getPassengerId();
+        Long userIdFromToken = requestAccessToken.getUserID();
 
-        Passenger passenger = passengerRepository.findById(passengerIdFromToken)
-                .orElseThrow(() -> new ReservationException("Passenger not found with the given ID: " + passengerIdFromToken));
+        User user = userRepository.findById(userIdFromToken)
+                .orElseThrow(() -> new ReservationException("User not found with the given ID: " + userIdFromToken));
 
+        Passenger passenger = user.getPassenger();
 
-        return passenger.getUser();
+        if (passenger == null) {
+            throw new ReservationException("Passenger not found for the given user ID: " + userIdFromToken);
+        }
+
+        return user;
     }
+
 
 
 
@@ -161,9 +167,6 @@ public class ReservationService implements IReservationService {
     }
 
 
-
-
-
     @Scheduled(initialDelay = 24 * 60 * 60 * 1000, fixedRate = 24 * 60 * 60 * 1000)
     public void scheduledReservationDeletion() {
         System.out.println("Scheduled deletion logic started!");
@@ -180,9 +183,6 @@ public class ReservationService implements IReservationService {
     }
 
 
-
-
-
     @Override
     @Transactional
     public List<Reservation> getAllReservation() throws ReservationException {
@@ -196,17 +196,13 @@ public class ReservationService implements IReservationService {
     }
 
 
-
     @Override
     @Transactional
     public List<Reservation> viewReservationsForCurrentUser() throws ReservationException {
-        Optional<User> userOptional = Optional.ofNullable(getUserFromToken());
-
-        User currentUser = userOptional.orElseThrow(() -> new ReservationException(USER_NOT_FOUND_MESSAGE));
+        User currentUser = getUserFromToken();
 
         Passenger passenger = currentUser.getPassenger();
         if (passenger != null) {
-
             List<Reservation> reservations = passenger.getReservationList();
 
             return reservations.stream()
@@ -216,9 +212,9 @@ public class ReservationService implements IReservationService {
                     })
                     .toList();
         } else {
-            throw new ReservationException("You don't have any reservations at the moment.");
+            // Modify the exception message to provide more clarity
+            throw new ReservationException("Passenger details not found for the current user.");
         }
-
     }
 
 
@@ -232,8 +228,6 @@ public class ReservationService implements IReservationService {
 
         return route;
     }
-
-
 
 
     void updateBusAvailability(Bus bus, int bookedSeats, boolean increaseSeats) {
@@ -270,8 +264,6 @@ public class ReservationService implements IReservationService {
     }
 
 
-
-
     void validateReservationDeletion(Long reservationId, LocalDate currentDate) throws ReservationException {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new ReservationException("Reservation not found"));
@@ -297,7 +289,6 @@ public class ReservationService implements IReservationService {
     }
 
 
-
     @Override
     @Transactional
     public List<Reservation> getAllReservationsByBusId(Long busId) throws ReservationException {
@@ -310,10 +301,4 @@ public class ReservationService implements IReservationService {
         return reservations;
     }
 
-
-
-
-
-
 }
-

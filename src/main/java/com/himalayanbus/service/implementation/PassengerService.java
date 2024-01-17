@@ -56,16 +56,20 @@ public class PassengerService implements IPassengerService {
 
     @Override
     @Transactional(rollbackFor = UserException.class)
-    public Passenger updatePassengerDetails(Long passengerID, Passenger updatedPassenger) throws UserException {
-        Passenger existingPassenger = getPassengerById(passengerID);
+    public Passenger updatePassengerDetails(Long userID, Passenger updatedPassenger) throws UserException {
+        // Retrieve the existing Passenger entity based on the provided userID
+        Passenger existingPassenger = getPassengerByUserId(userID);
 
         if (existingPassenger != null && updatedPassenger != null) {
+            // Update the existing Passenger details with the information from the updated Passenger
             existingPassenger.setFirstName(updatedPassenger.getFirstName());
             existingPassenger.setLastName(updatedPassenger.getLastName());
             existingPassenger.setPhoneNumber(updatedPassenger.getPhoneNumber());
 
+            // Save the updated Passenger entity to the database
             return passengerRepository.save(existingPassenger);
         } else {
+            // If either the existing Passenger or the updated Passenger details are null, throw an exception
             throw new UserException("Passenger details or passenger not found.");
         }
     }
@@ -116,11 +120,15 @@ public class PassengerService implements IPassengerService {
     //--------------------------- Sub-divided methods [dark coder - aryal]----------------------------------
 
 
-    @Override
-    public Passenger getPassengerById(Long passengerID) {
-        return passengerRepository.findById(passengerID).orElse(null);
-    }
+    public Passenger getPassengerByUserId(Long userID) {
+        User user = userRepository.findById(userID).orElse(null);
 
+        if (user != null) {
+            return user.getPassenger();
+        }
+
+        return null;
+    }
 
     private void validateNewUser(User user) throws UserException {
         if (userRepository.existsByEmail(user.getEmail())) {

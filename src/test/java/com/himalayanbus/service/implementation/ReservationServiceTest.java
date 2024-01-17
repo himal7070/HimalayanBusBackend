@@ -2,10 +2,7 @@ package com.himalayanbus.service.implementation;
 
 import com.himalayanbus.exception.ReservationException;
 import com.himalayanbus.persistence.entity.*;
-import com.himalayanbus.persistence.repository.IBusRepository;
-import com.himalayanbus.persistence.repository.IPassengerRepository;
-import com.himalayanbus.persistence.repository.IReservationRepository;
-import com.himalayanbus.persistence.repository.IRouteRepository;
+import com.himalayanbus.persistence.repository.*;
 import com.himalayanbus.security.token.AccessToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +29,9 @@ class ReservationServiceTest {
     private IPassengerRepository passengerRepository;
 
     @Mock
+    private IUserRepository userRepository;
+
+    @Mock
     private IRouteRepository routeRepository;
 
     @Mock
@@ -39,7 +39,6 @@ class ReservationServiceTest {
 
     @InjectMocks
     private ReservationService reservationService;
-
 
 
     @BeforeEach
@@ -50,27 +49,84 @@ class ReservationServiceTest {
     }
 
     @Test
-    void testGetUserFromToken_ValidToken_ReturnsUser() {
-        Long passengerId = 123L;
-        when(requestAccessToken.getPassengerId()).thenReturn(passengerId);
+    void testGetUserFromToken_ValidToken_ReturnsUserWithPassenger() {
+        // Mocking user ID from the access token
+        Long userId = 123L;
+        when(requestAccessToken.getUserID()).thenReturn(userId);
 
         User expectedUser = new User();
+        expectedUser.setUserID(userId);
 
         Passenger mockedPassenger = new Passenger();
-        mockedPassenger.setUser(expectedUser);
+        expectedUser.setPassenger(mockedPassenger);
 
-        when(passengerRepository.findById(passengerId)).thenReturn(Optional.of(mockedPassenger));
-
+        when(userRepository.findById(userId)).thenReturn(Optional.of(expectedUser));
 
         try {
+
             User actualUser = reservationService.getUserFromToken();
+
+            // Assertions
             assertNotNull(actualUser);
             assertEquals(expectedUser, actualUser);
+            assertNotNull(actualUser.getPassenger());
         } catch (ReservationException e) {
             fail("Exception should not be thrown for a valid token");
         }
 
+        // Verify that userRepository.findById was called with the correct userId
+        verify(userRepository, times(1)).findById(userId);
     }
+
+
+
+    @Test
+    void testGetUserFromToken_InvalidToken_ThrowsException() {
+        when(requestAccessToken.getUserID()).thenReturn(null);
+
+        assertThrows(ReservationException.class, () -> reservationService.getUserFromToken(),
+                "Exception should be thrown for an invalid token");
+    }
+
+    @Test
+    void testGetUserFromToken_UserNotFound_ThrowsException() {
+        Long userId = 123L;
+        when(requestAccessToken.getUserID()).thenReturn(userId);
+
+        // Mocking UserRepository to return an empty Optional, simulating user not found
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThrows(ReservationException.class, () -> reservationService.getUserFromToken(),
+                "Exception should be thrown when user is not found for the given token");
+    }
+
+    @Test
+    void testGetUserFromToken_PassengerNotFound_ThrowsException() {
+        Long userId = 123L;
+        when(requestAccessToken.getUserID()).thenReturn(userId);
+
+        User userWithoutPassenger = new User();
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userWithoutPassenger));
+
+        assertThrows(ReservationException.class, () -> reservationService.getUserFromToken(),
+                "Exception should be thrown when passenger is not found for the given user");
+    }
+
+    @Test
+    void testGetUserFromToken_UserFoundButPassengerIsNull_ThrowsException() {
+        Long userId = 123L;
+        when(requestAccessToken.getUserID()).thenReturn(userId);
+
+
+        User userWithNullPassenger = new User();
+        userWithNullPassenger.setPassenger(null);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userWithNullPassenger));
+
+        assertThrows(ReservationException.class, () -> reservationService.getUserFromToken(),
+                "Exception should be thrown when passenger is null for the given user");
+    }
+
+
 
 
 
@@ -96,7 +152,7 @@ class ReservationServiceTest {
         bus.setFare(10);
         bus.setRoute(new Route());
 
-        when(requestAccessToken.getPassengerId()).thenReturn(1L);
+        when(requestAccessToken.getUserID()).thenReturn(1L);
         when(passengerRepository.findById(any())).thenReturn(Optional.of(passenger));
         when(busRepository.findById(any())).thenReturn(Optional.of(bus));
         when(routeRepository.findByRouteFromAndRouteTo(any(), any())).thenReturn(new Route());
@@ -113,7 +169,7 @@ class ReservationServiceTest {
     @Test
     void testAddReservation_PassengerDetailsNotFound() {
         // Mocking necessary objects
-        when(requestAccessToken.getPassengerId()).thenReturn(1L);
+        when(requestAccessToken.getUserID()).thenReturn(1L);
         when(passengerRepository.findById(any())).thenReturn(Optional.empty());
 
         ReservationDTO reservationDTO = new ReservationDTO(); // Create DTO
@@ -207,20 +263,6 @@ class ReservationServiceTest {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @Test
     void testCreateReservation() throws ReservationException {
         // Mocking necessary objects
@@ -253,26 +295,6 @@ class ReservationServiceTest {
         assertEquals("Active", reservation.getStatus());
     }
 
-    @Test
-    void testGetUserFromToken() throws ReservationException {
-        // Mocking necessary objects
-        when(requestAccessToken.getPassengerId()).thenReturn(1L);
-
-        Passenger passenger = new Passenger();
-        passenger.setUser(new User());
-
-        when(passengerRepository.findById(any())).thenReturn(Optional.of(passenger));
-
-        // Call the method
-        User user = reservationService.getUserFromToken();
-
-        // Verify that the correct user is retrieved
-        assertNotNull(user);
-    }
-
-
-
-
 
 
     @Test
@@ -292,12 +314,6 @@ class ReservationServiceTest {
     }
 
 
-
-
-
-
-
-
     @Test
     void testScheduledReservationDeletion() {
         // Mock data
@@ -312,9 +328,6 @@ class ReservationServiceTest {
         // Verify interactions with mocks
         verify(reservationRepository, times(1)).deleteAll(reservationsToDelete);
     }
-
-
-
 
 
     @Test
@@ -335,10 +348,9 @@ class ReservationServiceTest {
     }
 
 
-
     @Test
     void testAddReservation_NoPassengerDetails_ExceptionThrown() {
-        when(requestAccessToken.getPassengerId()).thenReturn(1L);
+        when(requestAccessToken.getUserID()).thenReturn(1L);
         when(passengerRepository.findById(any())).thenReturn(Optional.empty());
 
         ReservationDTO reservationDTO = new ReservationDTO(); // Create DTO
@@ -362,7 +374,7 @@ class ReservationServiceTest {
         Passenger passenger = new Passenger();
         passenger.setUser(user);
 
-        when(requestAccessToken.getPassengerId()).thenReturn(1L);
+        when(requestAccessToken.getUserID()).thenReturn(1L);
         when(passengerRepository.findById(any())).thenReturn(Optional.of(passenger));
         when(busRepository.findById(any())).thenReturn(Optional.of(new Bus()));
         when(routeRepository.findByRouteFromAndRouteTo(any(), any())).thenReturn(new Route());
@@ -376,20 +388,14 @@ class ReservationServiceTest {
     }
 
 
-
-
     @Test
     void testViewReservationsForCurrentUser_NoReservations_ExceptionThrown() {
-        when(requestAccessToken.getPassengerId()).thenReturn(1L);
+        when(requestAccessToken.getUserID()).thenReturn(1L);
         when(passengerRepository.findById(any())).thenReturn(Optional.of(new Passenger()));
 
         assertThrows(ReservationException.class,
                 () -> reservationService.viewReservationsForCurrentUser());
     }
-
-
-
-
 
 
     @Test
@@ -413,7 +419,7 @@ class ReservationServiceTest {
 
         // Mock the requestAccessToken and passengerRepository
         AccessToken requestAccessToken = mock(AccessToken.class);
-        when(requestAccessToken.getPassengerId()).thenReturn(1L);
+        when(requestAccessToken.getUserID()).thenReturn(1L);
         IPassengerRepository passengerRepository = mock(IPassengerRepository.class);
         when(passengerRepository.findById(anyLong())).thenReturn(Optional.of(passenger));
 
@@ -422,7 +428,7 @@ class ReservationServiceTest {
                 mock(IReservationRepository.class),
                 mock(IBusRepository.class),
                 mock(IRouteRepository.class),
-                passengerRepository,
+                userRepository,
                 requestAccessToken
         );
 
@@ -439,24 +445,14 @@ class ReservationServiceTest {
     }
 
 
-
-
-
-
     @Test
     void testViewReservationsForCurrentUser_NoPassenger_ExceptionThrown() {
-        when(requestAccessToken.getPassengerId()).thenReturn(1L);
+        when(requestAccessToken.getUserID()).thenReturn(1L);
         when(passengerRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Call the method and verify the exception
         assertThrows(ReservationException.class, () -> reservationService.viewReservationsForCurrentUser());
     }
-
-
-
-
-
-
 
 
     @Test
@@ -486,11 +482,6 @@ class ReservationServiceTest {
     }
 
 
-
-
-
-
-
     @Test
     void testFindRoute_RouteFound() {
         // Mock necessary objects
@@ -509,7 +500,6 @@ class ReservationServiceTest {
     }
 
 
-
     @Test
     void testFindRoute_RouteNotFound() {
         // Mock necessary objects
@@ -520,7 +510,6 @@ class ReservationServiceTest {
 
         assertThrows(ReservationException.class, () -> reservationService.findRoute(departureLocation, destination));
     }
-
 
 
     @Test
@@ -534,7 +523,6 @@ class ReservationServiceTest {
 
         assertEquals(8, bus.getAvailableSeats());
     }
-
 
 
     @Test
@@ -571,7 +559,7 @@ class ReservationServiceTest {
 
     @Test
     void testGetReservationForUser_ReservationNotFound() {
-        // Mock necessary objects
+        // Mocked necessary objects
         User user = new User();
         Passenger passenger = new Passenger();
         Reservation reservation = new Reservation();
@@ -585,7 +573,7 @@ class ReservationServiceTest {
 
     @Test
     void testValidateReservationDeletion_PastReservationDate_ExceptionThrown() {
-        // Mock necessary objects
+        // Mocked necessary objects
         Reservation reservation = new Reservation();
         reservation.setJourneyDate(LocalDate.now().minusDays(1));
 
@@ -611,10 +599,8 @@ class ReservationServiceTest {
     }
 
 
-
-
     @Test
-     void testUpdateReservationStatus() {
+    void testUpdateReservationStatus() {
         // Prepare mock data
         Bus bus = new Bus();
         bus.setJourneyDate(LocalDate.now());
@@ -626,20 +612,17 @@ class ReservationServiceTest {
 
         List<Reservation> reservations = Collections.singletonList(reservation);
 
-        // Mock the behavior of reservationRepository.findAll()
+
         when(reservationRepository.findAll()).thenReturn(reservations);
 
-        // Test the updateReservationStatus method
+
+        when(reservationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
         reservationService.updateReservationStatus();
 
         // Verify that the status is updated correctly based on the conditions
         assertEquals("Expired", reservation.getStatus());
     }
-
-
-
-
-
 
 
 

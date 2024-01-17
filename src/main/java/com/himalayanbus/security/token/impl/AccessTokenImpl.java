@@ -12,19 +12,16 @@ import java.util.Set;
 @Getter
 public class AccessTokenImpl implements AccessToken {
     private final String subject;
-    private final Long passengerId;
+    private final Long userID;
     private final Set<String> roles;
 
-    public AccessTokenImpl(String subject, Long passengerId, Collection<String> roles) {
+    public AccessTokenImpl(String subject, Long userID, Collection<String> roles) {
         this.subject = subject;
-        this.passengerId = passengerId;
+        this.userID = userID;
         this.roles = roles != null ? Set.copyOf(roles) : Collections.emptySet();
     }
 
-    @Override
-    public boolean hasRole(String roleName) {
-        return this.roles.contains(roleName);
-    }
+
 
 
 }

@@ -29,6 +29,7 @@ public class UserService implements IUserService {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.javaMailSender = javaMailSender;
+
     }
 
     @Override
@@ -85,6 +86,9 @@ public class UserService implements IUserService {
     }
 
 
+
+
+
     @Override
     @Transactional(rollbackFor = UserException.class)
     public void initiatePasswordReset(String userEmail) throws UserException {
@@ -104,22 +108,16 @@ public class UserService implements IUserService {
         }
     }
 
-    private void sendResetEmail(String userEmail, String resetToken) {
-        try {
+    public void sendResetEmail(String userEmail, String resetToken) {
             SimpleMailMessage mailMessage = new SimpleMailMessage();
             mailMessage.setTo(userEmail);
             mailMessage.setSubject("Password Reset Request");
             mailMessage.setText("Your password reset token is: " + resetToken);
 
+            mailMessage.setFrom("himalayanbus7@gmail.com");
             javaMailSender.send(mailMessage);
-
-            System.out.println("Email sent successfully");
-        } catch (Exception e) {
-
-            e.printStackTrace();
-            System.out.println("Error sending email");
-        }
     }
+
 
 
 

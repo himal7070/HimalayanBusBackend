@@ -77,20 +77,30 @@ class PassengerServiceTest {
     @Test
     void testUpdatePassengerDetails_ValidPassenger() throws UserException {
         // Arrange
-        Long passengerId = 1L;
-        Passenger existingPassenger = new Passenger();
-        existingPassenger.setPassengerId(passengerId);
+        Long userId = 1L;
 
+        // Mocking user and passenger
+        User existingUser = new User();
+        existingUser.setUserID(userId);
+
+        Passenger existingPassenger = new Passenger();
+        existingPassenger.setFirstName("OldFirstName");
+        existingPassenger.setLastName("OldLastName");
+        existingPassenger.setPhoneNumber("OldPhoneNumber");
+        existingUser.setPassenger(existingPassenger);
+
+        // Mocking repository behavior
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(passengerRepository.save(any())).thenReturn(existingPassenger);
+
+        // Updated passenger details
         Passenger updatedPassenger = new Passenger();
         updatedPassenger.setFirstName("Himal");
         updatedPassenger.setLastName("Aryal");
         updatedPassenger.setPhoneNumber("1234567890");
 
-        when(passengerRepository.findById(passengerId)).thenReturn(Optional.of(existingPassenger));
-        when(passengerRepository.save(any())).thenReturn(updatedPassenger);
-
         // Act
-        Passenger resultPassenger = passengerService.updatePassengerDetails(passengerId, updatedPassenger);
+        Passenger resultPassenger = passengerService.updatePassengerDetails(userId, updatedPassenger);
 
         // Assert
         assertNotNull(resultPassenger);
@@ -99,9 +109,12 @@ class PassengerServiceTest {
         assertEquals("1234567890", resultPassenger.getPhoneNumber());
 
         // Verify
-        verify(passengerRepository, times(1)).findById(passengerId);
-        verify(passengerRepository, times(1)).save(any());
+        verify(userRepository, times(1)).findById(userId);
+        verify(passengerRepository, times(1)).save(existingPassenger);
+
+
     }
+
 
 
 

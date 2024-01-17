@@ -2,6 +2,8 @@ package com.himalayanbus.controller;
 
 import com.himalayanbus.exception.BusException;
 import com.himalayanbus.persistence.entity.Bus;
+import com.himalayanbus.security.token.AccessToken;
+import com.himalayanbus.security.token.IAccessControlService;
 import com.himalayanbus.service.IBusService;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -20,28 +22,41 @@ import java.util.Optional;
 public class BusController {
 
     private final IBusService busService;
-
-    public BusController(IBusService busService) {
+    private final IAccessControlService accessControlService;
+    public BusController(IBusService busService, IAccessControlService accessControlService) {
         this.busService = busService;
+        this.accessControlService = accessControlService;
     }
 
     @PostMapping("/add")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<Bus> addBus(@RequestBody Bus bus) throws BusException {
+    public ResponseEntity<Bus> addBus(@RequestBody Bus bus,  @RequestHeader("Authorization") String authorizationHeader) throws BusException {
+
+        AccessToken accessToken = accessControlService.extractAccessToken(authorizationHeader);
+        accessControlService.checkUserAccess(accessToken, accessToken.getSubject());
+
         Bus createdBus = busService.addBus(bus);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdBus);
     }
 
     @GetMapping("/viewAll")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<List<Bus>> viewAllBuses() throws BusException {
+    public ResponseEntity<List<Bus>> viewAllBuses( @RequestHeader("Authorization") String authorizationHeader) throws BusException {
+
+        AccessToken accessToken = accessControlService.extractAccessToken(authorizationHeader);
+        accessControlService.checkUserAccess(accessToken, accessToken.getSubject());
+
         List<Bus> busList = busService.viewAllBus();
         return ResponseEntity.status(HttpStatus.OK).body(busList);
     }
 
     @PutMapping("/update/{busId}")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<Bus> updateBus(@PathVariable Long busId, @RequestBody Bus newBusDetails) throws BusException {
+    public ResponseEntity<Bus> updateBus(@PathVariable Long busId, @RequestBody Bus newBusDetails,  @RequestHeader("Authorization") String authorizationHeader) throws BusException {
+
+        AccessToken accessToken = accessControlService.extractAccessToken(authorizationHeader);
+        accessControlService.checkUserAccess(accessToken, accessToken.getSubject());
+
         Bus updatedBus = busService.updateBus(busId, newBusDetails);
         return ResponseEntity.status(HttpStatus.OK).body(updatedBus);
     }
@@ -49,8 +64,12 @@ public class BusController {
 
     @DeleteMapping("/delete/{busId}")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<String> deleteBus(@PathVariable Long busId) {
+    public ResponseEntity<String> deleteBus(@PathVariable Long busId,  @RequestHeader("Authorization") String authorizationHeader) {
         try {
+
+            AccessToken accessToken = accessControlService.extractAccessToken(authorizationHeader);
+            accessControlService.checkUserAccess(accessToken, accessToken.getSubject());
+
             busService.deleteBus(busId);
             return ResponseEntity.status(HttpStatus.OK).body("Bus deleted successfully");
         } catch (BusException e) {
@@ -62,7 +81,11 @@ public class BusController {
 
     @GetMapping("/type/{busType}")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<List<Bus>> viewBusByType(@PathVariable String busType) throws BusException {
+    public ResponseEntity<List<Bus>> viewBusByType(@PathVariable String busType,  @RequestHeader("Authorization") String authorizationHeader) throws BusException {
+
+        AccessToken accessToken = accessControlService.extractAccessToken(authorizationHeader);
+        accessControlService.checkUserAccess(accessToken, accessToken.getSubject());
+
         List<Bus> busList = busService.viewBusByType(busType);
         return ResponseEntity.status(HttpStatus.OK).body(busList);
     }
@@ -70,7 +93,11 @@ public class BusController {
 
     @GetMapping("viewBus/{busId}")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<Bus> viewBus(@PathVariable Long busId) throws BusException {
+    public ResponseEntity<Bus> viewBus(@PathVariable Long busId,  @RequestHeader("Authorization") String authorizationHeader) throws BusException {
+
+        AccessToken accessToken = accessControlService.extractAccessToken(authorizationHeader);
+        accessControlService.checkUserAccess(accessToken, accessToken.getSubject());
+
         Bus bus = busService.viewBus(busId);
         return ResponseEntity.status(HttpStatus.OK).body(bus);
     }
@@ -78,8 +105,12 @@ public class BusController {
 
     @GetMapping("/count")
     @RolesAllowed("ADMIN")
-    public ResponseEntity<String> getTotalBusCount() {
+    public ResponseEntity<String> getTotalBusCount( @RequestHeader("Authorization") String authorizationHeader) {
         try {
+
+            AccessToken accessToken = accessControlService.extractAccessToken(authorizationHeader);
+            accessControlService.checkUserAccess(accessToken, accessToken.getSubject());
+
             long count = busService.countAllBuses();
             return ResponseEntity.ok("Total : " + count);
         } catch (BusException e) {
@@ -95,8 +126,12 @@ public class BusController {
     public ResponseEntity<List<Bus>> searchBusByRoute(
             @RequestParam(required = false) String routeFrom,
             @RequestParam(required = false) String routeTo,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate journeyDate
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate journeyDate,
+            @RequestHeader("Authorization") String authorizationHeader
     ) throws BusException {
+        AccessToken accessToken = accessControlService.extractAccessToken(authorizationHeader);
+        accessControlService.checkUserAccess(accessToken, accessToken.getSubject());
+
         if (routeFrom == null && routeTo == null) {
             throw new IllegalArgumentException("At least one route field should be provided");
         }
@@ -117,9 +152,14 @@ public class BusController {
     @RolesAllowed("ADMIN")
     public ResponseEntity<String> delayBusDeparture(
             @PathVariable Long busId,
-            @PathVariable Long delayMinutes
+            @PathVariable Long delayMinutes,
+            @RequestHeader("Authorization") String authorizationHeader
     ) {
         try {
+
+            AccessToken accessToken = accessControlService.extractAccessToken(authorizationHeader);
+            accessControlService.checkUserAccess(accessToken, accessToken.getSubject());
+
             Duration delayDuration = Duration.ofMinutes(delayMinutes);
 
             String updatedBusMessage = busService.delayBusDeparture(busId, delayDuration);

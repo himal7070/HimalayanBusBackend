@@ -15,6 +15,7 @@ public interface IUserService {
     @Transactional(rollbackFor = UserException.class)
     void initiatePasswordReset(String userEmail) throws UserException;
 
+
     @Transactional(rollbackFor = UserException.class)
     void completePasswordReset(String email, String resetToken, String newPassword) throws UserException;
 }
