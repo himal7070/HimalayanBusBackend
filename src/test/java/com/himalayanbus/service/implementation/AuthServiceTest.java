@@ -35,6 +35,8 @@ class AuthServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private IRoleRepository roleRepository;
     @InjectMocks
     private AuthService authService;
 
@@ -145,9 +147,76 @@ class AuthServiceTest {
 
 
 
+    @Test
+    void testLoginWithGoogle_UserExists() {
+        // Arrange
+        String googleUserEmail = "googleuser@example.com";
+
+        User existingUser = new User();
+        existingUser.setEmail(googleUserEmail);
+
+        when(userRepository.findByEmail(googleUserEmail)).thenReturn(existingUser);
+        when(accessTokenEncoder.encode(any())).thenReturn("mocked-access-token");
+
+        // Act
+        AuthResponse authResponse = authService.loginWithGoogle(googleUserEmail);
+
+        // Assert
+        assertNotNull(authResponse);
+        assertEquals("mocked-access-token", authResponse.getAccessToken());
+
+        // Verify
+        verify(userRepository, times(1)).findByEmail(googleUserEmail);
+        verify(accessTokenEncoder, times(1)).encode(any());
+        verifyNoMoreInteractions(userRepository, passwordEncoder, accessTokenEncoder);
+    }
 
 
 
+
+    @Test
+    void testCreateUserFromGoogle_UserDoesNotExist() {
+        // Arrange
+        String googleUserEmail = "googleuser@example.com";
+
+        when(userRepository.findByEmail(googleUserEmail)).thenReturn(null);
+
+        // Act
+        User createdUser = authService.createUserFromGoogle(googleUserEmail);
+
+        // Assert
+        assertNotNull(createdUser);
+        assertEquals(googleUserEmail, createdUser.getEmail());
+
+        // Verify
+        verify(userRepository, times(1)).findByEmail(googleUserEmail);
+        verify(userRepository, times(1)).save(any(User.class));
+        verify(roleRepository, times(1)).findByRole(UserRole.USER);
+        verify(roleRepository, times(1)).save(any(Role.class));
+        verifyNoMoreInteractions(userRepository, roleRepository);
+    }
+
+    @Test
+    void testCreateUserFromGoogle_UserExists() {
+        // Arrange
+        String googleUserEmail = "googleuser@example.com";
+
+        User existingUser = new User();
+        existingUser.setEmail(googleUserEmail);
+
+        when(userRepository.findByEmail(googleUserEmail)).thenReturn(existingUser);
+
+        // Act
+        User createdUser = authService.createUserFromGoogle(googleUserEmail);
+
+        // Assert
+        assertNotNull(createdUser);
+        assertEquals(googleUserEmail, createdUser.getEmail());
+
+        // Verify
+        verify(userRepository, times(1)).findByEmail(googleUserEmail);
+        verifyNoMoreInteractions(userRepository, roleRepository);
+    }
 
 
 

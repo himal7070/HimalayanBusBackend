@@ -4,6 +4,7 @@ import com.himalayanbus.dtos.WebSocketMessage;
 import com.himalayanbus.exception.ReservationException;
 import com.himalayanbus.persistence.entity.Passenger;
 import com.himalayanbus.persistence.entity.Reservation;
+import com.himalayanbus.persistence.entity.User;
 import com.himalayanbus.service.IReservationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,7 +38,9 @@ class WebSocketControllerTest {
 
         Reservation mockReservation = new Reservation();
         Passenger mockPassenger = new Passenger();
-        mockPassenger.setPassengerId(1L);
+        User mockUser = new User();
+        mockUser.setUserID(1L);
+        mockPassenger.setUser(mockUser);
         mockReservation.setPassenger(mockPassenger);
 
         List<Reservation> mockReservations = new ArrayList<>();
@@ -47,8 +50,19 @@ class WebSocketControllerTest {
 
         webSocketController.sendDelayNotification(mockWebSocketMessage);
 
-        verify(messagingTemplate, times(1)).convertAndSend(anyString(), anyString());
+        // Verify that convertAndSend is called for each passenger in the reservations list
+        for (Reservation reservation : mockReservations) {
+            Passenger passenger = reservation.getPassenger();
+            if (passenger != null) {
+                User user = passenger.getUser();
+                if (user != null) {
+                    Long userId = user.getUserID();
+                    String notify = "/user/" + userId + "/queue/notifications";
 
+                    verify(messagingTemplate, times(1)).convertAndSend(eq(notify), eq(mockWebSocketMessage.getMessage()));
+                }
+            }
+        }
     }
 
 }

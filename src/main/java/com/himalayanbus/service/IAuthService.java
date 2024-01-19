@@ -8,6 +8,6 @@ public interface IAuthService {
     @Transactional
     AuthResponse login(LoginRequest loginRequest);
 
-
-
+    @Transactional
+    AuthResponse loginWithGoogle(String googleUserEmail);
 }

@@ -3,6 +3,7 @@ package com.himalayanbus.controller;
 
 import com.himalayanbus.dtos.WebSocketMessage;
 import com.himalayanbus.exception.ReservationException;
+import com.himalayanbus.persistence.entity.Passenger;
 import com.himalayanbus.persistence.entity.Reservation;
 import com.himalayanbus.service.IReservationService;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -35,10 +36,13 @@ public class WebSocketController {
         List<Reservation> reservations = reservationService.getAllReservationsByBusId(busId);
 
         for (Reservation reservation : reservations) {
-            Long passengerId = reservation.getPassenger().getPassengerId();
-            String notify = "/user/" + passengerId + "/queue/notifications";
+            Passenger passenger = reservation.getPassenger();
+            if (passenger != null) {
+                Long userId = passenger.getUser().getUserID();
+                String notify = "/user/" + userId + "/queue/notifications";
 
-            messagingTemplate.convertAndSend(notify, delayMessage);
+                messagingTemplate.convertAndSend(notify, delayMessage);
+            }
         }
     }
 
