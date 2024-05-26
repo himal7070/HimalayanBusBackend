@@ -1,9 +1,11 @@
 #Himalayan Bus
 
 1	Goal of the project
+
 The goal of the bus tickets reservation system (“Himalayan Bus”) project is to create an efficient online platform for booking and purchasing bus tickets. This project aims to provide customers with a user-friendly experience, optimize the bus service provider's operations, and generate revenue by leveraging Information and Communication Technology (ICT). The system adds value by enhancing customer satisfaction, improving efficiency, and fostering data-driven decision-making, all while positioning the company as a competitive and customer-centric service provider.
 
 1.2	Scope and preconditions
+
 1.2.1	Inside Scope:
 
 a)	User Profile Management: Within the project's scope, user profile management includes user registration, login, and basic user information maintenance. Users can update their personal details, view their booking history, and reset their passwords.
