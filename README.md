@@ -21,3 +21,7 @@ The goal of the **bus tickets reservation system** (“Himalayan Bus”) project
 - **Real-Time Bus Tracking:** Implementing real-time tracking of buses and providing live updates on bus locations and delays is typically a complex and resource-intensive feature that is often considered for future enhancements rather than the initial project.
 
 - **Advanced Analytics and Reporting:** In-depth analytics and reporting functionalities, such as complex data analysis, revenue forecasting, or route optimization based on historical data, may fall outside the initial project scope. These advanced features often require more extensive development and data processing.
+
+
+**Frontend:**
+The frontend for the Himalayan Bus project can be found [here](https://github.com/himal7070/himalayanbusfrontend).
